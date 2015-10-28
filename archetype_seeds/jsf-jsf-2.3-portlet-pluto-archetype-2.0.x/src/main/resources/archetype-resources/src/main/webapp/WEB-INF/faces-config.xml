@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+
+<faces-config
+	version="2.1"
+	xmlns="http://java.sun.com/xml/ns/javaee"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-facesconfig_2_1.xsd"
+>
+	<application>
+		<resource-bundle>
+			<base-name>Language</base-name>
+			<var>i18n</var>
+		</resource-bundle>
+	</application>
+	<lifecycle>
+		<phase-listener>com.liferay.faces.util.lifecycle.DebugPhaseListener</phase-listener>
+	</lifecycle>
+</faces-config>

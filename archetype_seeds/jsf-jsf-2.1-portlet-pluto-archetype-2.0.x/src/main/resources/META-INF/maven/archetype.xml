@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+
+<archetype>
+	<id>jsf-portlet-pluto-archetype</id>
+	<resources>
+		<resource>src/main/webapp/WEB-INF/faces-config.xml</resource>
+		<resource>src/main/webapp/WEB-INF/portlet.xml</resource>
+		<resource>src/main/webapp/WEB-INF/web.xml</resource>
+		<resource>src/main/webapp/WEB-INF/views/view.xhtml</resource>
+		<resource>src/main/webapp/resources/css/main.css</resource>
+	</resources>
+</archetype>
