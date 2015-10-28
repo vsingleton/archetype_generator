@@ -14,7 +14,7 @@ my $yet = 0;
 
 # remove all archetypes previously installed
 `rm -rf ~/.m2/repository/com/liferay/faces/maven/archetypes/*`;
-# remove any stray portlet from previous run, just in case one is there ...
+# remove any stray war from previous run, just in case one is there ...
 `rm -rf ${portalDir}/tomcat-7.0.42/webapps/myArtifactId-1.0-SNAPSHOT`;
 
 my @bundles = ("jee", "tomcat");
@@ -182,13 +182,13 @@ mkdir("$dir");
 
 # setup basic dependency version numbers
 
-# Branch	Artifact										Liferay	Bridge	Portlet	JSF
-# ------ ----------------------------------  -------  ------   -------  ---
-# 6.0.x	liferay-faces-bridge-ext-6.0.0.jar	7.1.x		5.0.x		3.0		2.2
-# master	liferay-faces-bridge-ext-5.0.0.jar	7.0.x		4.0.x		2.0		2.2
-# 4.0.x	liferay-faces-bridge-ext-4.0.0.jar	7.0.x		3.0.x		2.0		2.1
-# 3.0.x	liferay-faces-bridge-ext-3.0.0.jar	6.2.x		4.0.x		2.0		2.2
-# 2.0.x	liferay-faces-bridge-ext-2.0.0.jar	6.2.x		3.0.x		2.0		2.1
+# Branch Artifact                           Liferay Bridge Portlet JSF
+# ------ ---------------------------------- ------- ------ ------- ---
+# 6.0.x  liferay-faces-bridge-ext-6.0.0.jar 7.1.x   5.0.x  3.0     2.2
+# master liferay-faces-bridge-ext-5.0.0.jar 7.0.x   4.0.x  2.0     2.2
+# 4.0.x  liferay-faces-bridge-ext-4.0.0.jar 7.0.x   3.0.x  2.0     2.1
+# 3.0.x  liferay-faces-bridge-ext-3.0.0.jar 6.2.x   4.0.x  2.0     2.2
+# 2.0.x  liferay-faces-bridge-ext-2.0.0.jar 6.2.x   3.0.x  2.0     2.1
 
 my %mojarra_version = ();
 $mojarra_version{"jsf-2.1"} = "2.1.29-04";
@@ -227,6 +227,7 @@ for $a (@archs) {
 	$now = time(); `echo $0: $now: $path: building ... >>$log`;
 	print "create $path ...";
 
+	# these next few lines assume a portlet, so they need to be updated to allow for webapps also
 	$artifactId = "${component}-portlet-${container}-${jsf}-archetype";
 	$name = "${component} portlet ${container} ${jsf} archetype";
 	$_ = $version;
@@ -259,36 +260,36 @@ for $a (@archs) {
 		mkdir "try" or die "cannot mkdir 'try': $!\n";
 		chdir "try" or die "cannot chdir to $path/try: $!\n";
 
-		# generate the archetype's portlet source
+		# generate the archetype's application source
 		$now = time(); `echo $0: $now: $path: archetype:generate ... >>$log`;
 		print " archetype:generate ...";
 		`mvn -B archetype:generate -DarchetypeGroupId=com.liferay.faces.maven.archetypes -DarchetypeArtifactId=$artifactId -DarchetypeVersion=$ver -DgroupId=myGroupId -DartifactId=myArtifactId >>mvn_archetype_generate.log 2>>mvn_archetype_generate.log`;
 
-		# build a portlet, if any
+		# build the application, if any
 		chdir "myArtifactId" or die "cannot chdir to $here/try/myArtifactId: $!\n";
 		if (-f "pom.xml") {
 
-			# build a portlet
+			# build the application
 			$now = time(); `echo $0: $now: $path: clean package ... >>$log`;
 			print " package ...";
 			`mvn clean package >>mvn_clean_package.log 2>>mvn_clean_package.log`;
 
-			# maybe ... deploy, test, and undeploy the portlet
+			# maybe ... deploy, test, and undeploy the application
 			if ($version eq "6.2.x") {
 
 				$now = time(); `echo $0: $now: $path: deploying ... >>$log`;
 				print " deploy ...";
 				`cp target/*.war ${deployDir}/.`;
-				&wait_for_deployment($now);
+				&wait_for_liferay_deployment($now);
 
 				$now = time(); `echo $0: $now: $path: testing ... >>$log`;
 				print " test ...";
 				`mvn -Dtest=com.liferay.faces.test.MyArtifactIdTester test >>test.out 2>>test.out`;
 
-				$now = time(); `echo $0: $now: $path: removing the portlet ... >>$log`;
+				$now = time(); `echo $0: $now: $path: removing the application ... >>$log`;
 				print " undeploy ...";
 				`rm -rf ${portalDir}/tomcat-7.0.42/webapps/myArtifactId-1.0-SNAPSHOT`;
-				&wait_for_undeployment($now);
+				&wait_for_liferay_undeployment($now);
 
 				print " done.\n";
 			}
@@ -405,7 +406,7 @@ sub fix {
 
 }
 
-sub wait_for_deployment() {
+sub wait_for_liferay_deployment() {
 	$now = shift;
 	@_ = (
 		$now,
@@ -415,7 +416,7 @@ sub wait_for_deployment() {
 	&monitor(@_);
 }
 
-sub wait_for_undeployment() {
+sub wait_for_liferay_undeployment() {
 	$now = shift;
 	@_ = (
 		$now,
