@@ -301,13 +301,13 @@ for $a (@archs) {
 
 sub fix {
 
-   my $file = $_;
+	my $file = $_;
 
 	my $key = "$jsf:$version";
 
 	# fix the archetype parent pom files to use the correct info
-   if ($file eq "pom.xml" and $File::Find::name !~ /archetype-resources/) {
-	   # print "    fixing: $File::Find::name\n";
+	if ($file eq "pom.xml" and $File::Find::name !~ /archetype-resources/) {
+		# print "    fixing: $File::Find::name\n";
 
 		# <groupId>com.liferay.faces.maven.archetypes</groupId>
 		# <artifactId>jsf-portlet-pluto-archetype</artifactId>
@@ -327,8 +327,8 @@ sub fix {
 	}
 
 	# fix the archetype resource pom files to use the correct impl and ext versions, if any
-   if ($file eq "pom.xml" and $File::Find::name =~ /archetype-resources/) {
-# 	   print "    fixing: $File::Find::name $key\n";
+	if ($file eq "pom.xml" and $File::Find::name =~ /archetype-resources/) {
+		# print "    fixing: $File::Find::name $key\n";
 
 # 		if (defined($ext_version{$key})) { 
 # 	      print "	$impl_version{$key} $ext_version{$key}\n";
@@ -358,23 +358,23 @@ sub fix {
 	}
 
 	# fix the archetype.xml
-   if ($file eq "archetype.xml") {
-	   # print "    fixing: $File::Find::name\n";
+	if ($file eq "archetype.xml") {
+		# print "    fixing: $File::Find::name\n";
 
 		# <id>jsf-portlet-liferay-archetype</id>
 		`perl -pi -e 's/^	<id>..*</	<id>$artifactId</g' $file`;
 	}
 
 	# fix the archetype-metadata.xml
-   if ($file eq "archetype-metadata.xml") {
-	   # print "    fixing: $File::Find::name\n";
+	if ($file eq "archetype-metadata.xml") {
+		# print "    fixing: $File::Find::name\n";
 
 		# <archetype-descriptor name="jsf-portlet-liferay-archetype">
 		`perl -pi -e 's/archetype-descriptor name="..*"/archetype-descriptor name="$artifactId"/' $file`;
 	}
 
 	# fix the view.xhtml
-   if ($file eq "view.xhtml") {
+	if ($file eq "view.xhtml") {
 
 		# establish the prefix for the component suite
 		$_ = $pre{"$component"};
@@ -383,10 +383,9 @@ sub fix {
 		# String found where operator expected at -e line 1, at end of line
 		# (Missing semicolon on previous line?)
 		# Can't find string terminator '"' anywhere before EOF at -e line 1.
-		# 
 		s,/,\\/,g;
 
-	   # print "    fixing: $File::Find::name $component $_\n";
+		# print "    fixing: $File::Find::name $component $_\n";
 		`perl -pi -e 's/^>/	$_\n>/g' $file`;
 
 		# wrap the hello world text with a panel from the component suite
@@ -394,16 +393,15 @@ sub fix {
 		s,\{,\\{,g;
 		s,\},\\},g;
 		s,\$,\\\$,g;
-	   # print "    fixing: $File::Find::name $component $_\n";
+		# print "    fixing: $File::Find::name $component $_\n";
 		`perl -pi -e 's/<h:outputText style/$_\n\t\t\t<h:outputText style/' $file`;
 
 		$_ = $closePanel{"$component"};
 		s,/,\\/,g;
-	   # print "    fixing: $File::Find::name $component $_\n";
+		# print "    fixing: $File::Find::name $component $_\n";
 		`perl -pi -e 's/<ul/$_\n\t\t<ul/' $file`;
-		
-	}
 
+	}
 }
 
 sub wait_for_liferay_deployment() {
