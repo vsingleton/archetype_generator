@@ -164,8 +164,8 @@ for $bundle (@bundles) {
 					# next if ($component eq "icefaces");
 					next unless ($version eq "6.2.x");
 
-					# print "${component}-${jsf}-${bundle}-${container}-archetype" . (($version) ? "-" : "") . "${version}\n";
-					$arch{"${component} ${jsf} ${bundle} ${container} ${version}"} += 1;
+					# print "${component}-${bundle}-${container}-${jsf}-archetype" . (($version) ? "-" : "") . "${version}\n";
+					$arch{"${component} ${bundle} ${container} ${jsf} ${version}"} += 1;
 
 					# 2. simply manually add individual filters allowing only the archetypes we vote to release
 					# next if not in "this" list
@@ -220,9 +220,9 @@ my($a,$path);
 my($artifactId,$name,$ver,$description);
 my @archs = reverse sort keys %arch;
 for $a (@archs) {
-	($component,$jsf,$bundle,$container,$version) = split " ", "    ";
-	($component,$jsf,$bundle,$container,$version) = split " ", $a;
-	$path = "$dir/$component/$jsf/$bundle/$container/$version";
+	($component,$bundle,$container,$jsf,$version) = split " ", "    ";
+	($component,$bundle,$container,$jsf,$version) = split " ", $a;
+	$path = "$dir/$component/$bundle/$container/$jsf/$version";
 
 	$now = time(); `echo $0: $now: $path: building ... >>$log`;
 	print "create $path ...";
@@ -240,10 +240,10 @@ for $a (@archs) {
 
 	mkpath "$path";
 	if ($container eq "pluto") {
-		`cp -pr archetype_seeds/jsf-$jsf-portlet-pluto-archetype-2.0.x/* $path/.`;
+		`cp -pr archetype_seeds/jsf-portlet-pluto-$jsf-archetype-2.0.x/* $path/.`;
 	}
 	if ($container eq "liferay") {
-		`cp -pr archetype_seeds/jsf-$jsf-portlet-liferay-archetype-6.2.x/* $path/.`;
+		`cp -pr archetype_seeds/jsf-portlet-liferay-$jsf-archetype-6.2.x/* $path/.`;
 	}
 
 	# fix the archetype
