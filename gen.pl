@@ -206,7 +206,7 @@ for $bundle (@bundles) {
 					# next unless ($version eq "6.2.x"); # portal only
 					next unless ($version eq "1.0.x"); # apache tomcat only
 
-					next unless ($component =~ /alloy/);
+					# next unless ($component =~ /alloy/);
 
 					# print "${component}-${bundle}-${container}-${jsf}-archetype" . (($version) ? "-" : "") . "${version}\n";
 					$arch{"${component} ${bundle} ${container} ${jsf} ${version}"} += 1;
@@ -451,7 +451,7 @@ sub fix {
 
 		if ($container eq "webapp") {
 
-			if ($jsf ne "jsf-2.1") {
+			if ($component =~ /liferay/ and $jsf ne "jsf-2.1") {
 				$_ = $comp{"liferay-faces-util"};
 				s,/,\\/,g;
 				s,<,\\<,g;
@@ -476,7 +476,7 @@ sub fix {
 		}
 
 		# add reslib dependency if necessary
-		if (($component =~ /alloy/ or $component =~ /crystal/) and $container eq "webapp") {
+		if ($component =~ /liferay/ and $container eq "webapp") {
 			$_ = $comp{"${component}-reslib"};
 			s,/,\\/,g;
 			s,<,\\<,g;

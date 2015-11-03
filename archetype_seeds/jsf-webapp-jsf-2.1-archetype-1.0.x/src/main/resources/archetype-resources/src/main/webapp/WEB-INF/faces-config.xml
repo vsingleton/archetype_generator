@@ -9,7 +9,7 @@
 
 	<application>
 		<resource-bundle>
-			<base-name>Language</base-name>
+			<base-name>i18n</base-name>
 			<var>i18n</var>
 		</resource-bundle>
 	</application>
