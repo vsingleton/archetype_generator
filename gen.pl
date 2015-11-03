@@ -196,8 +196,9 @@ for $bundle (@bundles) {
 					next if ($bundle eq "jee");
 					# next if ($component eq "icefaces");
 
-					# next unless ($version eq "6.2.x");
-					next unless ($version eq "1.0.x");
+					next unless ($version eq "6.2.x"); # portal only
+					# next unless ($version eq "1.0.x"); # apache tomcat only
+
 					# next unless ($component =~ /alloy/);
 
 					# print "${component}-${bundle}-${container}-${jsf}-archetype" . (($version) ? "-" : "") . "${version}\n";
@@ -500,9 +501,11 @@ sub fix {
 
 	# fix the MyArtifactIdTester.java
 	if ($file eq "MyArtifactIdTester.java") {
-		`perl -pi -e 's,:9080/web/guest,:8080,' $file`;
-		`perl -pi -e 's,/arch,/myArtifactId-1.0-SNAPSHOT,' $file`;
-		`perl -pi -e 's,:panelId,panelId,' $file`;
+		if ($container eq "webapp") {
+			`perl -pi -e 's,:9080/web/guest,:8080,' $file`;
+			`perl -pi -e 's,/arch,/myArtifactId-1.0-SNAPSHOT,' $file`;
+			`perl -pi -e 's,:panelId,panelId,' $file`;
+		}
 	}
 }
 
