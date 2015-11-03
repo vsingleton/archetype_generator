@@ -11,11 +11,6 @@
 	<properties>
 		<htmlunit.version>2.17</htmlunit.version>
 		<junit.version>4.12</junit.version>
-		<liferay.app.server.deploy.dir>${liferay.app.server.dir}/webapps</liferay.app.server.deploy.dir>
-		<liferay.app.server.lib.global.dir>${liferay.app.server.dir}/lib/ext</liferay.app.server.lib.global.dir>
-		<liferay.app.server.portal.dir>${liferay.app.server.dir}/webapps/ROOT</liferay.app.server.portal.dir>
-		<liferay.app.server.dir>${liferay.home}/tomcat-7.0.42</liferay.app.server.dir>
-		<liferay.auto.deploy.dir>${liferay.home}/deploy</liferay.auto.deploy.dir>
 		<liferay.faces.bridge.ext.version>2.0.0-SNAPSHOT</liferay.faces.bridge.ext.version>
 		<liferay.faces.bridge.impl.version>3.0.0-SNAPSHOT</liferay.faces.bridge.impl.version>
 		<liferay.home>${env.SERVERS_HOME}/liferay-portal-6.2-ce-ga4</liferay.home>
@@ -31,10 +26,6 @@
 				<artifactId>liferay-maven-plugin</artifactId>
 				<version>${liferay.maven.plugin.version}</version>
 				<configuration>
-					<autoDeployDir>${liferay.auto.deploy.dir}</autoDeployDir>
-					<appServerDeployDir>${liferay.app.server.deploy.dir}</appServerDeployDir>
-					<appServerLibGlobalDir>${liferay.app.server.lib.global.dir}</appServerLibGlobalDir>
-					<appServerPortalDir>${liferay.app.server.portal.dir}</appServerPortalDir>
 					<liferayVersion>${liferay.version}</liferayVersion>
 					<pluginType>portlet</pluginType>
 				</configuration>
