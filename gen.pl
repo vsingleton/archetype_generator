@@ -4,18 +4,27 @@ use strict;
 use File::Path;
 use File::Find;
 
-# set up portal for testing ...
-my $portalsDir = "$ENV{'HOME'}/Portals/liferay.com";
-my $portalsVersion = "6.2.3";
-my $portalDir = "${portalsDir}/liferay-portal-${portalsVersion}";
-my $deployDir = "${portalDir}/deploy";
-my $log = "${portalDir}/tomcat-7.0.42/logs/catalina.out";
+# set up Liferay for testing ...
+my $liferaysDir = "$ENV{'HOME'}/Portals/liferay.com";
+my $liferayVersion = "6.2.3";
+my $liferayDir = "${liferaysDir}/liferay-portal-${liferayVersion}";
+
+# set up apache tomcat for testing ...
+my $apachesDir = "$ENV{'HOME'}/httpds";
+my $apacheVersion = "8.0.20";
+my $apacheDir = "${apachesDir}/apache-tomcat-${apacheVersion}";
+
+my $deployDir = "${liferayDir}/deploy";
+my $log = "${liferayDir}/tomcat-7.0.42/logs/catalina.out";
 my $yet = 0;
 
 # remove all archetypes previously installed
+`rm -rf ~/.m2/archetype-catalog.xml`;
 `rm -rf ~/.m2/repository/com/liferay/faces/maven/archetypes/*`;
+
 # remove any stray war from previous run, just in case one is there ...
-`rm -rf ${portalDir}/tomcat-7.0.42/webapps/myArtifactId-1.0-SNAPSHOT`;
+`rm -rf ${apacheDir}/webapps/myArtifactId-1.0-SNAPSHOT`;
+`rm -rf ${liferayDir}/tomcat-7.0.42/webapps/myArtifactId-1.0-SNAPSHOT`;
 
 my @bundles = ("jee", "tomcat");
 my @containers = ("webapp", "pluto", "liferay");
@@ -23,7 +32,7 @@ my @jsfs = ("jsf-2.1", "jsf-2.2", "jsf-2.3");
 my @components = ("jsf", "liferay-faces-alloy", "liferay-faces-crystal", "primefaces", "richfaces", "icefaces");
 
 my %versions = ();
-@{$versions{"webapp"}} = ("");
+@{$versions{"webapp"}} = ("1.0.x");
 @{$versions{"liferay"}} = ("6.2.x", "7.0.x", "7.1.x");
 @{$versions{"pluto"}}= ("2.0.x", "3.0.x");
 
@@ -113,14 +122,38 @@ $comp{'icefaces'} = $_;
 $_ = $dependency;
 s/groupId>..*</groupId>com.liferay.faces.alloy</;
 s/artifactId>..*</artifactId>liferay-faces-alloy</;
-s/version>..*</version>3.0.0-SNAPSHOT</;
+s/version>..*</version>2.0.0-SNAPSHOT</;
 $comp{'liferay-faces-alloy'} = $_;
+
+$_ = $dependency;
+s/groupId>..*</groupId>com.liferay.faces.alloy</;
+s/artifactId>..*</artifactId>liferay-faces-alloy-reslib</;
+s/version>..*</version>2.0.0-SNAPSHOT</;
+$comp{'liferay-faces-alloy-reslib'} = $_;
 
 $_ = $dependency;
 s/groupId>..*</groupId>com.liferay.faces.crystal</;
 s/artifactId>..*</artifactId>liferay-faces-crystal</;
 s/version>..*</version>1.0.0-SNAPSHOT</;
 $comp{'liferay-faces-crystal'} = $_;
+
+$_ = $dependency;
+s/groupId>..*</groupId>com.liferay.faces.crystal</;
+s/artifactId>..*</artifactId>liferay-faces-crystal-reslib</;
+s/version>..*</version>1.0.0-SNAPSHOT</;
+$comp{'liferay-faces-crystal-reslib'} = $_;
+
+$_ = $dependency;
+s/groupId>..*</groupId>com.liferay.faces.crystal</;
+s/artifactId>..*</artifactId>liferay-faces-crystal-reslib</;
+s/version>..*</version>1.0.0-SNAPSHOT</;
+$comp{'liferay-faces-crystal-reslib'} = $_;
+
+$_ = $dependency;
+s/groupId>..*</groupId>javax.enterprise</;
+s/artifactId>..*</artifactId>cdi-api</;
+s/version>..*</version>1.2</;
+$comp{'cdi-api'} = $_;
 
 # set up a template for a component to be included from the component suite, if any
 my $id = "panelId";
@@ -156,13 +189,16 @@ for $bundle (@bundles) {
 					# 1. applying filters
 					next if ($bundle eq "jee" and $jsf ne "jsf-2.1");
 					next if ($container eq "liferay" and $jsf eq "jsf-2.3");
-					next if ($version eq "7.1.x"  and $jsf eq "jsf-2.1");
-					next if ($version eq "3.0.x"  and $jsf eq "jsf-2.1");
-					next if ($version eq "2.0.x"  and $jsf eq "jsf-2.3");
+					next if ($version eq "7.1.x" and $jsf eq "jsf-2.1");
+					next if ($version eq "3.0.x" and $jsf eq "jsf-2.1");
+					next if ($version eq "2.0.x" and $jsf eq "jsf-2.3");
 
 					next if ($bundle eq "jee");
 					# next if ($component eq "icefaces");
-					next unless ($version eq "6.2.x");
+
+					# next unless ($version eq "6.2.x");
+					next unless ($version eq "1.0.x");
+					# next unless ($component =~ /alloy/);
 
 					# print "${component}-${bundle}-${container}-${jsf}-archetype" . (($version) ? "-" : "") . "${version}\n";
 					$arch{"${component} ${bundle} ${container} ${jsf} ${version}"} += 1;
@@ -193,7 +229,7 @@ mkdir("$dir");
 my %mojarra_version = ();
 $mojarra_version{"jsf-2.1"} = "2.1.29-04";
 $mojarra_version{"jsf-2.2"} = "2.2.12";
-$mojarra_version{"jsf-2.3"} = "2.3.0-m05-SNAPSHOT";
+$mojarra_version{"jsf-2.3"} = "2.3.0-m04-SNAPSHOT";
 
 my %impl_version = ();
 $impl_version{"jsf-2.1:2.0.x"} = "3.0.x";
@@ -228,21 +264,31 @@ for $a (@archs) {
 	print "create $path ...";
 
 	# these next few lines assume a portlet, so they need to be updated to allow for webapps also
-	$artifactId = "${component}-portlet-${container}-${jsf}-archetype";
-	$name = "${component} portlet ${container} ${jsf} archetype";
+	$artifactId = "${component}-" . (($container eq "webapp") ? "webapp" : "portlet-${container}") . "-${jsf}-archetype";
+	$name = "${component} " . (($container eq "webapp") ? "webapp" : "portlet ${container}") . " ${jsf} archetype";
+	$description = "Provides a " . ucfirst($container) . " archetype to create a " . $component . " component application.";
+
 	$_ = $version;
 	s/\.x/.0-SNAPSHOT/;
 	$ver = $_;
-	$description = "Provides an archetype to create " . $component . " JSF portlets for " . ucfirst($container) . ".";
 
 	$_ = `pwd`; chomp;
 	my $here = $_;
 
 	mkpath "$path";
+	if ($container eq "webapp") {
+		$deployDir="${apacheDir}/webapps";
+		$log = "${apacheDir}/logs/catalina.out";
+		`cp -pr archetype_seeds/jsf-webapp-jsf-2.1-archetype-1.0.x/* $path/.`;
+	}
 	if ($container eq "pluto") {
+		# $deployDir="${plutoDir}/tomcat-7.0.42/webapps";
+		# $log = "${plutoDir}/tomcat-7.0.42/logs/catalina.out";
 		`cp -pr archetype_seeds/jsf-portlet-pluto-$jsf-archetype-2.0.x/* $path/.`;
 	}
 	if ($container eq "liferay") {
+		$deployDir = "${liferayDir}/deploy";
+		$log = "${liferayDir}/tomcat-7.0.42/logs/catalina.out";
 		`cp -pr archetype_seeds/jsf-portlet-liferay-$jsf-archetype-6.2.x/* $path/.`;
 	}
 
@@ -272,24 +318,46 @@ for $a (@archs) {
 			# build the application
 			$now = time(); `echo $0: $now: $path: clean package ... >>$log`;
 			print " package ...";
-			`mvn clean package >>mvn_clean_package.log 2>>mvn_clean_package.log`;
+			# `mvn clean package >>mvn_clean_package.log 2>>mvn_clean_package.log`;
+			my $cmd = "mvn clean package >>mvn_clean_package.log 2>>mvn_clean_package.log";
+			system($cmd);
+			if ($? == -1) { print "failed to execute $cmd: $!\n"; }
+			elsif ($? & 127) { printf "child of $cmd died with signal %d, %s coredump\n", ($? & 127),  ($? & 128) ? 'with' : 'without'; }
+			# else { printf "child of $cmd exited with (" . $? . ") value => %d\n", $? >> 8; }
+      	if ($? >> 8) {
+				print `grep ERROR mvn_clean_package.log | head -1` . "\n";
+				chdir $here or die "cannot chdir back to $here: $!\n";
+				next;
+			}
 
 			# maybe ... deploy, test, and undeploy the application
-			if ($version eq "6.2.x") {
+			if ($version eq "6.2.x" or $version eq "1.0.x") {
 
 				$now = time(); `echo $0: $now: $path: deploying ... >>$log`;
 				print " deploy ...";
 				`cp target/*.war ${deployDir}/.`;
-				&wait_for_liferay_deployment($now);
+				if ($container eq "liferay") {
+					&wait_for_liferay_deployment($now);
+				}
+				if ($container eq "webapp") {
+					&wait_for_webapp_deployment($now);
+				}
 
 				$now = time(); `echo $0: $now: $path: testing ... >>$log`;
 				print " test ...";
 				`mvn -Dtest=com.liferay.faces.test.MyArtifactIdTester test >>test.out 2>>test.out`;
 
 				$now = time(); `echo $0: $now: $path: removing the application ... >>$log`;
-				print " undeploy ...";
-				`rm -rf ${portalDir}/tomcat-7.0.42/webapps/myArtifactId-1.0-SNAPSHOT`;
-				&wait_for_liferay_undeployment($now);
+				if ($container eq "liferay") {
+					print " undeploy from liferay ...";
+					`rm -rf ${liferayDir}/tomcat-7.0.42/webapps/myArtifactId-1.0-SNAPSHOT`;
+				}
+				if ($container eq "webapp") {
+					print " undeploy webapp ...";
+					`rm -rf ${apacheDir}/webapps/myArtifactId-1.0-SNAPSHOT.war`;
+					`rm -rf ${apacheDir}/webapps/myArtifactId-1.0-SNAPSHOT`;
+				}
+				&wait_for_undeployment($now);
 
 				print " done.\n";
 			}
@@ -326,37 +394,6 @@ sub fix {
 
 	}
 
-	# fix the archetype resource pom files to use the correct impl and ext versions, if any
-	if ($file eq "pom.xml" and $File::Find::name =~ /archetype-resources/) {
-		# print "    fixing: $File::Find::name $key\n";
-
-# 		if (defined($ext_version{$key})) { 
-# 	      print "	$impl_version{$key} $ext_version{$key}\n";
-# 		} else {
-# 	      print "	$impl_version{$key}\n";
-# 		}
-
-		# <liferay.faces.bridge.impl.version>3.0.0-SNAPSHOT</liferay.faces.bridge.impl.version>
-		`perl -pi -e 's/liferay.faces.bridge.impl.version>[34].0.0-SNAPSHOT</liferay.faces.bridge.impl.version>$impl_version{"$key"}</g' $file`;
-		# print `grep "liferay.faces.bridge.impl.version>" $file`;
-
-		# <liferay.faces.bridge.ext.version>2.0.0-SNAPSHOT</liferay.faces.bridge.ext.version>
-		if ($container eq "liferay") {
-			`perl -pi -e 's/liferay.faces.bridge.ext.version>[23].0.0-SNAPSHOT</liferay.faces.bridge.ext.version>$ext_version{"$key"}</g' $file`;
-			# print `grep "liferay.faces.bridge.ext.version>" $file`;
-		}
-
-		# <mojarra.version>2.1.29-04</mojarra.version>
-		# `perl -pi -e 's/mojarra.version>2.1.29-04</mojarra.version>$mojarra_version{"$jsf"}</g' $file`;
-
-		# add dependency for any component suite
-		$_ = $comp{"$component"};
-		s,/,\\/,g;
-		s,<,\\<,g;
-		s,>,\\>,g;
-		`perl -pi -e 's/.<\\/dependencies>/$_	<\\/dependencies>/g' $file`;
-	}
-
 	# fix the archetype.xml
 	if ($file eq "archetype.xml") {
 		# print "    fixing: $File::Find::name\n";
@@ -371,6 +408,64 @@ sub fix {
 
 		# <archetype-descriptor name="jsf-portlet-liferay-archetype">
 		`perl -pi -e 's/archetype-descriptor name="..*"/archetype-descriptor name="$artifactId"/' $file`;
+	}
+
+	##### fix archetype-resources below here #####
+
+	# fix the archetype resource pom files to use the correct impl and ext versions, if any
+	if ($file eq "pom.xml" and $File::Find::name =~ /archetype-resources/) {
+		# print "    fixing: $File::Find::name $key\n";
+
+# 		if (defined($ext_version{$key})) { 
+# 	      print "	$impl_version{$key} $ext_version{$key}\n";
+# 		} else {
+# 	      print "	$impl_version{$key}\n";
+# 		}
+
+		# <liferay.faces.bridge.impl.version>3.0.0-SNAPSHOT</liferay.faces.bridge.impl.version>
+		if ($container ne "webapp") {
+			`perl -pi -e 's/liferay.faces.bridge.impl.version>[34].0.0-SNAPSHOT</liferay.faces.bridge.impl.version>$impl_version{"$key"}</g' $file`;
+			# print `grep "liferay.faces.bridge.impl.version>" $file`;
+		}
+
+		# <liferay.faces.bridge.ext.version>2.0.0-SNAPSHOT</liferay.faces.bridge.ext.version>
+		if ($container eq "liferay") {
+			`perl -pi -e 's/liferay.faces.bridge.ext.version>[23].0.0-SNAPSHOT</liferay.faces.bridge.ext.version>$ext_version{"$key"}</g' $file`;
+			# print `grep "liferay.faces.bridge.ext.version>" $file`;
+		}
+
+		# add dependency for any component suite
+		$_ = $comp{"$component"};
+		s,/,\\/,g;
+		s,<,\\<,g;
+		s,>,\\>,g;
+		`perl -pi -e 's/.<\\/dependencies>/$_	<\\/dependencies>/g' $file`;
+
+		if ($container eq "webapp") {
+			# <mojarra.version>2.1.29-04</mojarra.version>
+			`perl -pi -e 's/mojarra.version>2.1.29-04</mojarra.version>$mojarra_version{"$jsf"}</g' $file`;
+
+			# SEVERE [localhost-startStop-7] com.sun.faces.config.ConfigureListener.contextInitialized Critical error during deployment: 
+			# java.lang.NoClassDefFoundError: javax/enterprise/context/spi/Contextual
+			# ...
+			# Caused by: java.lang.ClassNotFoundException: javax.enterprise.context.spi.Contextual
+			if ($component eq "primefaces" and $jsf eq "jsf-2.3") {
+				$_ = $comp{"cdi-api"};
+				s,/,\\/,g;
+				s,<,\\<,g;
+				s,>,\\>,g;
+				`perl -pi -e 's/.<\\/dependencies>/$_	<\\/dependencies>/g' $file`;
+			}
+		}
+
+		# add reslib dependency if necessary
+		if (($component =~ /alloy/ or $component =~ /crystal/) and $container eq "webapp") {
+			$_ = $comp{"${component}-reslib"};
+			s,/,\\/,g;
+			s,<,\\<,g;
+			s,>,\\>,g;
+			`perl -pi -e 's/.<\\/dependencies>/$_	<\\/dependencies>/g' $file`;
+		}
 	}
 
 	# fix the view.xhtml
@@ -402,6 +497,24 @@ sub fix {
 		`perl -pi -e 's/<ul/$_\n\t\t<ul/' $file`;
 
 	}
+
+	# fix the MyArtifactIdTester.java
+	if ($file eq "MyArtifactIdTester.java") {
+		`perl -pi -e 's,:9080/web/guest,:8080,' $file`;
+		`perl -pi -e 's,/arch,/myArtifactId-1.0-SNAPSHOT,' $file`;
+		`perl -pi -e 's,:panelId,panelId,' $file`;
+	}
+}
+
+# Deployment of web application archive /Users/apple/httpds/apache-tomcat-8.0.20/webapps/myArtifactId-1.0-SNAPSHOT.war has finished in
+sub wait_for_webapp_deployment() {
+	$now = shift;
+	@_ = (
+		$now,
+		"Deployment of web application archive ..*myArtifactId-1.0-SNAPSHOT.war has finished in",
+		"waiting for myArtifactId-1.0-SNAPSHOT to be deployed ..."
+	);
+	&monitor(@_);
 }
 
 sub wait_for_liferay_deployment() {
@@ -410,6 +523,17 @@ sub wait_for_liferay_deployment() {
 		$now,
 		"portlet for myArtifactId-1.0-SNAPSHOT is available for use",
 		"waiting for myArtifactId-1.0-SNAPSHOT to be deployed ..."
+	);
+	&monitor(@_);
+}
+
+# Undeploying context [/myArtifactId-1.0-SNAPSHOT]
+sub wait_for_undeployment() {
+	$now = shift;
+	@_ = (
+		$now,
+		"Undeploying context ./myArtifactId-1.0-SNAPSHOT.",
+		"waiting for myArtifactId-1.0-SNAPSHOT to be undeployed ..."
 	);
 	&monitor(@_);
 }
