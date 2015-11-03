@@ -203,8 +203,9 @@ for $bundle (@bundles) {
 					next if ($bundle eq "jee");
 					# next if ($component eq "icefaces");
 
-					# next unless ($version eq "6.2.x"); # portal only
-					next unless ($version eq "1.0.x"); # apache tomcat only
+					# next unless ($version eq "6.2.x"); # liferay 6.2 only
+					# next unless ($version eq "1.0.x"); # apache tomcat only
+					next unless ($version eq "1.0.x" or $version eq "6.2.x"); # apache tomcat or liferay 6.2
 
 					# next unless ($component =~ /alloy/);
 
@@ -268,7 +269,6 @@ for $a (@archs) {
 	($component,$bundle,$container,$jsf,$version) = split " ", $a;
 	$path = "$dir/$component/$bundle/$container/$jsf/$version";
 
-	$now = time(); `echo $0: $now: $path: building ... >>$log`;
 	print "create $path ...";
 
 	# these next few lines assume a portlet, so they need to be updated to allow for webapps also
@@ -283,6 +283,7 @@ for $a (@archs) {
 	$_ = `pwd`; chomp;
 	my $here = $_;
 
+	$now = time(); `echo $0: $now: $path: building ... >>$log`;
 	mkpath "$path";
 	if ($container eq "webapp") {
 		$deployDir="${apacheDir}/webapps";
