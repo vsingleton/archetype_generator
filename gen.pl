@@ -155,6 +155,13 @@ s/artifactId>..*</artifactId>cdi-api</;
 s/version>..*</version>1.2</;
 $comp{'cdi-api'} = $_;
 
+# com.liferay.faces.util:liferay-faces-util:jar:3.0.0-SNAPSHOT:compile
+$_ = $dependency;
+s/groupId>..*</groupId>com.liferay.faces.util</;
+s/artifactId>..*</artifactId>liferay-faces-util</;
+s/version>..*</version>3.0.0-SNAPSHOT</;
+$comp{'liferay-faces-util'} = $_;
+
 # set up a template for a component to be included from the component suite, if any
 my $id = "panelId";
 my %openPanel = ();
@@ -196,10 +203,10 @@ for $bundle (@bundles) {
 					next if ($bundle eq "jee");
 					# next if ($component eq "icefaces");
 
-					next unless ($version eq "6.2.x"); # portal only
-					# next unless ($version eq "1.0.x"); # apache tomcat only
+					# next unless ($version eq "6.2.x"); # portal only
+					next unless ($version eq "1.0.x"); # apache tomcat only
 
-					# next unless ($component =~ /alloy/);
+					next unless ($component =~ /alloy/);
 
 					# print "${component}-${bundle}-${container}-${jsf}-archetype" . (($version) ? "-" : "") . "${version}\n";
 					$arch{"${component} ${bundle} ${container} ${jsf} ${version}"} += 1;
@@ -443,6 +450,15 @@ sub fix {
 		`perl -pi -e 's/.<\\/dependencies>/$_	<\\/dependencies>/g' $file`;
 
 		if ($container eq "webapp") {
+
+			if ($jsf ne "jsf-2.1") {
+				$_ = $comp{"liferay-faces-util"};
+				s,/,\\/,g;
+				s,<,\\<,g;
+				s,>,\\>,g;
+				`perl -pi -e 's/.<\\/dependencies>/$_	<\\/dependencies>/g' $file`;
+			}
+
 			# <mojarra.version>2.1.29-04</mojarra.version>
 			`perl -pi -e 's/mojarra.version>2.1.29-04</mojarra.version>$mojarra_version{"$jsf"}</g' $file`;
 
