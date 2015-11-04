@@ -4,15 +4,20 @@ use strict;
 use File::Path;
 use File::Find;
 
+my $httpdsDir = "$ENV{'HOME'}/httpds";
+my $portalsDir = "$ENV{'HOME'}/Portals/liferay.com";
+
 # set up Liferay for testing ...
-my $liferaysDir = "$ENV{'HOME'}/Portals/liferay.com";
 my $liferayVersion = "6.2.3";
-my $liferayDir = "${liferaysDir}/liferay-portal-${liferayVersion}";
+my $liferayDir = "${portalsDir}/liferay-portal-${liferayVersion}";
+
+# set up Pluto for testing ...
+my $plutoVersion = "2.0.x";
+my $plutoDir = "${portalsDir}/pluto-${plutoVersion}";
 
 # set up apache tomcat for testing ...
-my $apachesDir = "$ENV{'HOME'}/httpds";
 my $apacheVersion = "8.0.20";
-my $apacheDir = "${apachesDir}/apache-tomcat-${apacheVersion}";
+my $apacheDir = "${httpdsDir}/apache-tomcat-${apacheVersion}";
 
 my $deployDir = "${liferayDir}/deploy";
 my $log = "${liferayDir}/tomcat-7.0.42/logs/catalina.out";
@@ -23,7 +28,10 @@ my $yet = 0;
 `rm -rf ~/.m2/repository/com/liferay/faces/maven/archetypes/*`;
 
 # remove any stray war from previous run, just in case one is there ...
+`rm -rf ${apacheDir}/webapps/myArtifactId-1.0-SNAPSHOT.war`;
 `rm -rf ${apacheDir}/webapps/myArtifactId-1.0-SNAPSHOT`;
+`rm -rf ${plutoDir}/tomcat-7.0.42/webapps/myArtifactId-1.0-SNAPSHOT.war`;
+`rm -rf ${plutoDir}/tomcat-7.0.42/webapps/myArtifactId-1.0-SNAPSHOT`;
 `rm -rf ${liferayDir}/tomcat-7.0.42/webapps/myArtifactId-1.0-SNAPSHOT`;
 
 my @bundles = ("jee", "tomcat");
@@ -181,6 +189,29 @@ $closePanel{"richfaces"} = "</rich:panel>";
 $closePanel{"liferay-faces-alloy"} = "</alloy:panel>";
 $closePanel{"liferay-faces-crystal"} = "</crystal:panel>";
 
+# richfaces web.xml foo
+(my $webDotXmlFoo = q{
+
+	<!-- Enable RichFaces Resource Mapping -->
+	<context-param>
+		<param-name>org.richfaces.resourceMapping.enabled</param-name>
+		<param-value>true</param-value>
+	</context-param>
+
+	<!-- The RichFaces Resource Servlet provides static resources for the rich:editor component. If it is invoked for -->
+	<!-- for a resource that is not associated with the rich:editor component\, then it delegates to the FacesServlet. -->
+	<servlet>
+		<servlet-name>Resource Servlet</servlet-name>
+		<servlet-class>org.richfaces.webapp.ResourceServlet</servlet-class>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>Resource Servlet</servlet-name>
+		<url-pattern>/org.richfaces.resources/*</url-pattern>
+	</servlet-mapping>
+
+}) =~ s/^ {8}//mg;
+
 # iterate over our dimensions of the archetypes to generate a list of all our archetypes
 my %arch = ();
 
@@ -204,10 +235,15 @@ for $bundle (@bundles) {
 					# next if ($component eq "icefaces");
 
 					# next unless ($version eq "6.2.x"); # liferay 6.2 only
+					# next unless ($version eq "2.0.x"); # pluto 2.0 only
 					# next unless ($version eq "1.0.x"); # apache tomcat only
-					next unless ($version eq "1.0.x" or $version eq "6.2.x"); # apache tomcat or liferay 6.2
+
+					# next unless ($version eq "1.0.x" or $version eq "6.2.x"); # apache tomcat or liferay 6.2
+					next unless ($version eq "1.0.x" or $version eq "2.0.x" or $version eq "6.2.x"); # apache tomcat, pluto, or liferay 6.2
 
 					# next unless ($component =~ /alloy/);
+					# next unless ($component =~ /prime/);
+					# next unless ($component =~ /rich/);
 
 					# print "${component}-${bundle}-${container}-${jsf}-archetype" . (($version) ? "-" : "") . "${version}\n";
 					$arch{"${component} ${bundle} ${container} ${jsf} ${version}"} += 1;
@@ -241,10 +277,10 @@ $mojarra_version{"jsf-2.2"} = "2.2.12";
 $mojarra_version{"jsf-2.3"} = "2.3.0-m04-SNAPSHOT";
 
 my %impl_version = ();
-$impl_version{"jsf-2.1:2.0.x"} = "3.0.x";
-$impl_version{"jsf-2.2:2.0.x"} = "4.0.x";
-$impl_version{"jsf-2.2:3.0.x"} = "5.0.x";
-$impl_version{"jsf-2.3:3.0.x"} = "5.0.x";
+$impl_version{"jsf-2.1:2.0.x"} = "3.0.0-SNAPSHOT";
+$impl_version{"jsf-2.2:2.0.x"} = "4.0.0-SNAPSHOT";
+$impl_version{"jsf-2.2:3.0.x"} = "5.0.0-SNAPSHOT";
+$impl_version{"jsf-2.3:3.0.x"} = "5.0.0-SNAPSHOT";
 
 $impl_version{"jsf-2.1:6.2.x"} = "3.0.0-SNAPSHOT";
 $impl_version{"jsf-2.2:6.2.x"} = "4.0.0-SNAPSHOT";
@@ -291,8 +327,8 @@ for $a (@archs) {
 		`cp -pr archetype_seeds/jsf-webapp-jsf-2.1-archetype-1.0.x/* $path/.`;
 	}
 	if ($container eq "pluto") {
-		# $deployDir="${plutoDir}/tomcat-7.0.42/webapps";
-		# $log = "${plutoDir}/tomcat-7.0.42/logs/catalina.out";
+		$deployDir="${plutoDir}/tomcat-7.0.42/webapps";
+		$log = "${plutoDir}/tomcat-7.0.42/logs/catalina.out";
 		`cp -pr archetype_seeds/jsf-portlet-pluto-$jsf-archetype-2.0.x/* $path/.`;
 	}
 	if ($container eq "liferay") {
@@ -340,36 +376,44 @@ for $a (@archs) {
 			}
 
 			# maybe ... deploy, test, and undeploy the application
-			if ($version eq "6.2.x" or $version eq "1.0.x") {
+			if ($ARGV[0] and $ARGV[0] =~ /test/ ) {
+				if ($version eq "6.2.x" or $version eq "2.0.x" or $version eq "1.0.x") {
 
-				$now = time(); `echo $0: $now: $path: deploying ... >>$log`;
-				print " deploy ...";
-				`cp target/*.war ${deployDir}/.`;
-				if ($container eq "liferay") {
-					&wait_for_liferay_deployment($now);
-				}
-				if ($container eq "webapp") {
-					&wait_for_webapp_deployment($now);
-				}
+					$now = time(); `echo $0: $now: $path: deploying ... >>$log`;
+					print " deploy ...";
+					`cp target/*.war ${deployDir}/.`;
+					if ($container eq "liferay") {
+						&wait_for_liferay_deployment($now);
+					}
+					if ($container eq "pluto") {
+						&wait_for_pluto_deployment($now);
+					}
+					if ($container eq "webapp") {
+						&wait_for_webapp_deployment($now);
+					}
 
-				$now = time(); `echo $0: $now: $path: testing ... >>$log`;
-				print " test ...";
-				`mvn -Dtest=com.liferay.faces.test.MyArtifactIdTester test >>test.out 2>>test.out`;
+					$now = time(); `echo $0: $now: $path: testing ... >>$log`;
+					print " test ...";
+					`mvn -Dtest=com.liferay.faces.test.MyArtifactIdTester test >>test.out 2>>test.out`;
 
-				$now = time(); `echo $0: $now: $path: removing the application ... >>$log`;
-				if ($container eq "liferay") {
-					print " undeploy from liferay ...";
-					`rm -rf ${liferayDir}/tomcat-7.0.42/webapps/myArtifactId-1.0-SNAPSHOT`;
+					print " undeploy ...";
+					$now = time(); `echo $0: $now: $path: removing the application ... >>$log`;
+					if ($container eq "liferay") {
+						`rm -rf ${liferayDir}/tomcat-7.0.42/webapps/myArtifactId-1.0-SNAPSHOT`;
+					}
+					if ($container eq "pluto") {
+						`rm -rf ${plutoDir}/tomcat-7.0.42/webapps/myArtifactId-1.0-SNAPSHOT.war`;
+						`rm -rf ${plutoDir}/tomcat-7.0.42/webapps/myArtifactId-1.0-SNAPSHOT`;
+					}
+					if ($container eq "webapp") {
+						`rm -rf ${apacheDir}/webapps/myArtifactId-1.0-SNAPSHOT.war`;
+						`rm -rf ${apacheDir}/webapps/myArtifactId-1.0-SNAPSHOT`;
+					}
+					&wait_for_undeployment($now);
 				}
-				if ($container eq "webapp") {
-					print " undeploy webapp ...";
-					`rm -rf ${apacheDir}/webapps/myArtifactId-1.0-SNAPSHOT.war`;
-					`rm -rf ${apacheDir}/webapps/myArtifactId-1.0-SNAPSHOT`;
-				}
-				&wait_for_undeployment($now);
-
-				print " done.\n";
 			}
+
+			print " done.\n";
 		}
 	}
 
@@ -524,14 +568,31 @@ sub fix {
 			`perl -pi -e 's,:panelId,panelId,' $file`;
 		}
 	}
+
+	if ($file eq "web.xml") {
+		if ($component eq "richfaces") {
+			`perl -pi -e 's,</web-app>,	$webDotXmlFoo\n</web-app>,' $file`;
+		}
+	}
 }
 
-# Deployment of web application archive /Users/apple/httpds/apache-tomcat-8.0.20/webapps/myArtifactId-1.0-SNAPSHOT.war has finished in
+# Deployment of web application archive ..*myArtifactId-1.0-SNAPSHOT.war has finished in
 sub wait_for_webapp_deployment() {
 	$now = shift;
 	@_ = (
 		$now,
 		"Deployment of web application archive ..*myArtifactId-1.0-SNAPSHOT.war has finished in",
+		"waiting for myArtifactId-1.0-SNAPSHOT to be deployed ..."
+	);
+	&monitor(@_);
+}
+
+# Initializing Mojarra 2.2.12 ..* for context '/myArtifactId-1.0-SNAPSHOT'
+sub wait_for_pluto_deployment() {
+	$now = shift;
+	@_ = (
+		$now,
+		"Initializing ..* for context '/myArtifactId-1.0-SNAPSHOT'",
 		"waiting for myArtifactId-1.0-SNAPSHOT to be deployed ..."
 	);
 	&monitor(@_);
