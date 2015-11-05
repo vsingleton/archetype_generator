@@ -8,8 +8,13 @@ my $httpdsDir = "$ENV{'HOME'}/httpds";
 my $portalsDir = "$ENV{'HOME'}/Portals/liferay.com";
 
 # set up Liferay for testing ...
-my $liferayVersion = "6.2.3";
-my $liferayDir = "${portalsDir}/liferay-portal-${liferayVersion}";
+
+my $liferay7_0Version = "7.0.0-a2";
+my $liferay6_2Version = "6.2.3";
+
+my %liferayDir = ();
+$liferayDir{"$liferay6_2Version"} = "${portalsDir}/liferay-portal-${liferay6_2Version}";
+$liferayDir{"$liferay7_0Version"} = "${portalsDir}/liferay-portal-${liferay7_0Version}";
 
 # set up Pluto for testing ...
 my $plutoVersion = "2.0.x";
@@ -19,8 +24,10 @@ my $plutoDir = "${portalsDir}/pluto-${plutoVersion}";
 my $apacheVersion = "8.0.20";
 my $apacheDir = "${httpdsDir}/apache-tomcat-${apacheVersion}";
 
-my $deployDir = "${liferayDir}/deploy";
-my $log = "${liferayDir}/tomcat-7.0.42/logs/catalina.out";
+my $liferayHome = "";
+my $servletImplDir = "";
+my $deployDir = "";
+my $log = "";
 my $yet = 0;
 
 # remove all archetypes previously installed
@@ -32,7 +39,8 @@ my $yet = 0;
 `rm -rf ${apacheDir}/webapps/myArtifactId-1.0-SNAPSHOT`;
 `rm -rf ${plutoDir}/tomcat-7.0.42/webapps/myArtifactId-1.0-SNAPSHOT.war`;
 `rm -rf ${plutoDir}/tomcat-7.0.42/webapps/myArtifactId-1.0-SNAPSHOT`;
-`rm -rf ${liferayDir}/tomcat-7.0.42/webapps/myArtifactId-1.0-SNAPSHOT`;
+`rm -rf $liferayDir{$liferay6_2Version}/tomcat-*/webapps/myArtifactId-1.0-SNAPSHOT`;
+`rm -rf $liferayDir{$liferay7_0Version}/tomcat-*/webapps/myArtifactId-1.0-SNAPSHOT`;
 
 my @bundles = ("jee", "tomcat");
 my @containers = ("webapp", "pluto", "liferay");
@@ -234,12 +242,17 @@ for $bundle (@bundles) {
 					next if ($bundle eq "jee");
 					# next if ($component eq "icefaces");
 
+					# next unless ($version eq "7.0.x"); # liferay 7.0 only
 					# next unless ($version eq "6.2.x"); # liferay 6.2 only
 					# next unless ($version eq "2.0.x"); # pluto 2.0 only
 					# next unless ($version eq "1.0.x"); # apache tomcat only
 
-					# next unless ($version eq "1.0.x" or $version eq "6.2.x"); # apache tomcat or liferay 6.2
-					next unless ($version eq "1.0.x" or $version eq "2.0.x" or $version eq "6.2.x"); # apache tomcat, pluto, or liferay 6.2
+					next unless (
+					 	$version eq "1.0.x" or
+						$version eq "2.0.x" or
+						$version eq "6.2.x" or
+						$version eq "7.0.x"
+					);
 
 					# next unless ($component =~ /alloy/);
 					# next unless ($component =~ /prime/);
@@ -319,21 +332,31 @@ for $a (@archs) {
 	$_ = `pwd`; chomp;
 	my $here = $_;
 
-	$now = time(); `echo $0: $now: $path: building ... >>$log`;
 	mkpath "$path";
 	if ($container eq "webapp") {
 		$deployDir="${apacheDir}/webapps";
 		$log = "${apacheDir}/logs/catalina.out";
+
+		$now = time(); `echo $0: $now: $path: building ... >>$log`;
 		`cp -pr archetype_seeds/jsf-webapp-jsf-2.1-archetype-1.0.x/* $path/.`;
 	}
 	if ($container eq "pluto") {
 		$deployDir="${plutoDir}/tomcat-7.0.42/webapps";
 		$log = "${plutoDir}/tomcat-7.0.42/logs/catalina.out";
+
+		$now = time(); `echo $0: $now: $path: building ... >>$log`;
 		`cp -pr archetype_seeds/jsf-portlet-pluto-$jsf-archetype-2.0.x/* $path/.`;
 	}
 	if ($container eq "liferay") {
-		$deployDir = "${liferayDir}/deploy";
-		$log = "${liferayDir}/tomcat-7.0.42/logs/catalina.out";
+		if ($version =~ /^6.2/) { $liferayHome = $liferayDir{$liferay6_2Version}; }
+		if ($version =~ /^7.0/) { $liferayHome = $liferayDir{$liferay7_0Version}; }
+		$deployDir = "${liferayHome}/deploy";
+
+		$_ = `ls -d ${liferayHome}/tomcat-*`; chomp;
+		$servletImplDir = $_;
+		$log = "${servletImplDir}/logs/catalina.out";
+
+		$now = time(); `echo $0: $now: $path: building ... >>$log`;
 		`cp -pr archetype_seeds/jsf-portlet-liferay-$jsf-archetype-6.2.x/* $path/.`;
 	}
 
@@ -377,7 +400,7 @@ for $a (@archs) {
 
 			# maybe ... deploy, test, and undeploy the application
 			if ($ARGV[0] and $ARGV[0] =~ /test/ ) {
-				if ($version eq "6.2.x" or $version eq "2.0.x" or $version eq "1.0.x") {
+				if ($version eq "7.0.x" or $version eq "6.2.x" or $version eq "2.0.x" or $version eq "1.0.x") {
 
 					$now = time(); `echo $0: $now: $path: deploying ... >>$log`;
 					print " deploy ...";
@@ -399,7 +422,7 @@ for $a (@archs) {
 					print " undeploy ...";
 					$now = time(); `echo $0: $now: $path: removing the application ... >>$log`;
 					if ($container eq "liferay") {
-						`rm -rf ${liferayDir}/tomcat-7.0.42/webapps/myArtifactId-1.0-SNAPSHOT`;
+						`rm -rf ${servletImplDir}/webapps/myArtifactId-1.0-SNAPSHOT`;
 					}
 					if ($container eq "pluto") {
 						`rm -rf ${plutoDir}/tomcat-7.0.42/webapps/myArtifactId-1.0-SNAPSHOT.war`;
@@ -562,6 +585,9 @@ sub fix {
 
 	# fix the MyArtifactIdTester.java
 	if ($file eq "MyArtifactIdTester.java") {
+		if ($version =~ /^7.0/) {
+			`perl -pi -e 's,:9080/,:8080/,' $file`;
+		}
 		if ($container eq "webapp") {
 			`perl -pi -e 's,:9080/web/guest,:8080,' $file`;
 			`perl -pi -e 's,/arch,/myArtifactId-1.0-SNAPSHOT,' $file`;
