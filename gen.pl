@@ -30,7 +30,7 @@ my $deployDir = "";
 my $log = "";
 my $yet = 0;
 
-# remove all archetypes previously installed
+# remove all archetypes previously installed locally
 `rm -rf ~/.m2/archetype-catalog.xml`;
 `rm -rf ~/.m2/repository/com/liferay/faces/maven/archetypes/*`;
 
@@ -258,8 +258,8 @@ for $bundle (@bundles) {
 					# next unless ($component =~ /prime/);
 					# next unless ($component =~ /rich/);
 
-					# print "${component}-${bundle}-${container}-${jsf}-archetype" . (($version) ? "-" : "") . "${version}\n";
-					$arch{"${component} ${bundle} ${container} ${jsf} ${version}"} += 1;
+					# print "${component}-${bundle}-${container}" . (($version) ? "-" : "") . "${version}-${jsf}-archetype\n";
+					$arch{"${component} ${bundle} ${container} ${version} $jsf"} += 1;
 
 					# 2. simply manually add individual filters allowing only the archetypes we vote to release
 					# next if not in "this" list
@@ -314,9 +314,9 @@ my($a,$path);
 my($artifactId,$name,$ver,$description);
 my @archs = reverse sort keys %arch;
 for $a (@archs) {
-	($component,$bundle,$container,$jsf,$version) = split " ", "    ";
-	($component,$bundle,$container,$jsf,$version) = split " ", $a;
-	$path = "$dir/$component/$bundle/$container/$jsf/$version";
+	($component,$bundle,$container,$version,$jsf) = split " ", "    ";
+	($component,$bundle,$container,$version,$jsf) = split " ", $a;
+	$path = "$dir/$component/$bundle/$container/$version/$jsf";
 
 	print "create $path ...";
 
