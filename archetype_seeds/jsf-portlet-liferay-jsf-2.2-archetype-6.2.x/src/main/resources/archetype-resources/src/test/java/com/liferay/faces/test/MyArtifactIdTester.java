@@ -9,6 +9,7 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.gargoylesoftware.htmlunit.BrowserVersion;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlDivision;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
@@ -49,7 +50,7 @@ public class MyArtifactIdTester {
 
 	@Before
 	public void setUp() {
-		webClient = new WebClient();
+		webClient = new WebClient(BrowserVersion.FIREFOX_38);
 		webClient.getOptions().setJavaScriptEnabled(true);
 		java.util.logging.Logger.getLogger("com.gargoylesoftware.htmlunit").setLevel(Level.OFF);
 	}

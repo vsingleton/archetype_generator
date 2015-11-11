@@ -240,7 +240,6 @@ for $bundle (@bundles) {
 					next if ($version eq "2.0.x" and $jsf eq "jsf-2.3");
 
 					next if ($bundle eq "jee");
-					# next if ($component eq "icefaces");
 
 					# next unless ($version eq "7.0.x"); # liferay 7.0 only
 					# next unless ($version eq "6.2.x"); # liferay 6.2 only
@@ -254,9 +253,10 @@ for $bundle (@bundles) {
 						$version eq "7.0.x"
 					);
 
-					# next unless ($component =~ /alloy/);
-					# next unless ($component =~ /prime/);
-					# next unless ($component =~ /rich/);
+					# next if ($component eq "icefaces");  # skip IceFaces
+					# next unless ($component =~ /alloy/); # AlloyFaces only
+					# next unless ($component =~ /prime/); # PrimeFaces only
+					# next unless ($component =~ /rich/);  # RichFaces only
 
 					# print "${component}-${bundle}-${container}" . (($version) ? "-" : "") . "${version}-${jsf}-archetype\n";
 					$arch{"${component} ${bundle} ${container} ${version} $jsf"} += 1;
@@ -320,7 +320,6 @@ for $a (@archs) {
 
 	print "create $path ...";
 
-	# these next few lines assume a portlet, so they need to be updated to allow for webapps also
 	$artifactId = "${component}-" . (($container eq "webapp") ? "webapp" : "portlet-${container}") . "-${jsf}-archetype";
 	$name = "${component} " . (($container eq "webapp") ? "webapp" : "portlet ${container}") . " ${jsf} archetype";
 	$description = "Provides a " . ucfirst($container) . " archetype to create a " . $component . " component application.";
