@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title="Liferay Faces Dependencies" />
+	<script>document.write('<base href="' + document.location + '" />');</script>
+	<link rel="stylesheet" href="deps.css" />
+	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.0-beta.1/angular.min.js"></script>
+	<script src="deps.js"></script>
+</head>
+<body ng-app="liferay-faces-deps">
+	<h2>Liferay Faces Dependencies</h2>
+	<div ng-controller="depsController">
+	<form>
+	<div>
+		<label for="suiteSelectId">Components:</label>
+		<select name="suiteSelectName" id="suiteSelectId" ng-change="setSuite()"
+			ng-options="suite.name for suite in data.suites track by suite.name"
+			ng-model="data.suite"><option style="display:none" value="">select</option></select>
+	</div>
+	<div>
+		<label for="suiteSelectId">Servlet:</label>
+		<select name="servletSelectName" id="servletSelectId" ng-disabled="!data.suite.servlets"
+			ng-options="servlet.name for servlet in data.suite.servlets track by servlet.name"
+			ng-model="data.servlet"><option style="display:none" value="">select</option></select>
+	</div>
+	<div>
+		<label for="serverSelectId">Server:</label>
+		<select name="serverSelectName" id="serverSelectId" ng-change="setServer()" ng-disabled="!data.servlet.servers"
+			ng-options="server.name for server in data.servlet.servers track by server.name"
+			ng-model="data.server"><option style="display:none" value="">select</option></select>
+	</div>
+	<div>
+		<label for="versionSelectId">Version:</label>
+		<select name="versionSelectName" id="versionSelectId" ng-disabled="!data.server.versions"
+			ng-options="version.name for version in data.server.versions track by version.name"
+			ng-model="data.version"><option style="display:none" value="">select</option></select>
+	</div>
+	<div>
+		<label for="jsfSelectId">JSF:</label>
+		<select name="jsfSelectName" id="jsfSelectId" ng-disabled="!data.version.jsfs"
+			ng-options="jsf.name for jsf in data.version.jsfs track by jsf.name"
+			ng-model="data.jsf"><option style="display:none" value="">select</option></select>
+	</div>
+	<div>
+		<label for="buildSelectId">Build:</label>
+		<select name="buildSelectName" id="buildSelectId" ng-disabled="!data.jsf.builds"
+			ng-options="build.name for build in data.jsf.builds track by build.name"
+			ng-model="data.build"><option style="display:none" value="">select</option></select>
+	</div>
+	</form>
+	<h2>{{data.suite.name}}/{{data.servlet.name}}/{{data.server.name}}/{{data.version.name}}/{{data.jsf.name}}</h2>
+	<h2><a href="/deps/archetypes/{{data.suite.name}}/{{data.servlet.name}}/{{data.server.name}}/{{data.version.name}}/{{data.jsf.name}}/try/myArtifactId/{{data.build.name}}">{{data.build.name}}</a></h2>
+	</div>
+</body>
+</html>

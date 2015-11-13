@@ -270,9 +270,9 @@ for $bundle (@bundles) {
 }
 
 # create an empty directory to store our new archetypes
-my $dir = "archetypes";
+my $dir = "deps/archetypes";
 if (-d "$dir") { `rm -rf $dir`; }
-mkdir("$dir");
+mkpath("$dir");
 
 # setup basic dependency version numbers
 
@@ -318,7 +318,7 @@ for $a (@archs) {
 	($component,$bundle,$container,$version,$jsf) = split " ", $a;
 	$path = "$dir/$component/$bundle/$container/$version/$jsf";
 
-	print "create $path ...";
+	print "$component/$bundle/$container/$version/$jsf ...";
 
 	$artifactId = "${component}-" . (($container eq "webapp") ? "webapp" : "portlet-${container}") . "-${jsf}-archetype";
 	$name = "${component} " . (($container eq "webapp") ? "webapp" : "portlet ${container}") . " ${jsf} archetype";
