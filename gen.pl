@@ -397,6 +397,19 @@ for $a (@archs) {
 				next;
 			}
 
+			$now = time(); `echo $0: $now: $path: gradle init ... >>$log`;
+			print " gradle ...";
+			$cmd = "gradle init >>gradle_init.log 2>>gradle_init.log";
+			system($cmd);
+			if ($? == -1) { print "failed to execute $cmd: $!\n"; }
+			elsif ($? & 127) { printf "child of $cmd died with signal %d, %s coredump\n", ($? & 127),  ($? & 128) ? 'with' : 'without'; }
+			# else { printf "child of $cmd exited with (" . $? . ") value => %d\n", $? >> 8; }
+			if ($? >> 8) {
+				print `grep -i ERROR gradle_init.log | head -1` . "\n";
+				chdir $here or die "cannot chdir back to $here: $!\n";
+				next;
+			}
+
 			# maybe ... deploy, test, and undeploy the application
 			if ($ARGV[0] and $ARGV[0] =~ /test/ ) {
 				if ($version eq "7.0.x" or $version eq "6.2.x" or $version eq "2.0.x" or $version eq "1.0.x") {
