@@ -336,14 +336,18 @@ for $a (@archs) {
 		$deployDir="${apacheDir}/webapps";
 		$log = "${apacheDir}/logs/catalina.out";
 
-		$now = time(); `echo $0: $now: $path: building ... >>$log`;
+		if (-f $log) {
+			$now = time(); `echo $0: $now: $path: building ... >>$log`;
+		}
 		`cp -pr archetype_seeds/jsf-webapp-jsf-2.1-archetype-1.0.x/* $path/.`;
 	}
 	if ($container eq "pluto") {
 		$deployDir="${plutoDir}/tomcat-7.0.42/webapps";
 		$log = "${plutoDir}/tomcat-7.0.42/logs/catalina.out";
 
-		$now = time(); `echo $0: $now: $path: building ... >>$log`;
+		if (-f $log) {
+			$now = time(); `echo $0: $now: $path: building ... >>$log`;
+		}
 		`cp -pr archetype_seeds/jsf-portlet-pluto-$jsf-archetype-2.0.x/* $path/.`;
 	}
 	if ($container eq "liferay") {
@@ -351,11 +355,13 @@ for $a (@archs) {
 		if ($version =~ /^7.0/) { $liferayHome = $liferayDir{$liferay7_0Version}; }
 		$deployDir = "${liferayHome}/deploy";
 
-		$_ = `ls -d ${liferayHome}/tomcat-*`; chomp;
+		$_ = `ls -d ${liferayHome}/tomcat-* 2>>/dev/null`; chomp;
 		$servletImplDir = $_;
 		$log = "${servletImplDir}/logs/catalina.out";
 
-		$now = time(); `echo $0: $now: $path: building ... >>$log`;
+		if (-f $log) {
+			$now = time(); `echo $0: $now: $path: building ... >>$log`;
+		}
 		`cp -pr archetype_seeds/jsf-portlet-liferay-$jsf-archetype-6.2.x/* $path/.`;
 	}
 
@@ -367,14 +373,18 @@ for $a (@archs) {
 	if (-f "pom.xml") {
 
 		# install the generated archetype
-		$now = time(); `echo $0: $now: $path: clean install ... >>$log`;
+		if (-f $log) {
+			$now = time(); `echo $0: $now: $path: clean install ... >>$log`;
+		}
 		`mvn clean install >>mvn_clean_install.log 2>>mvn_clean_install.log`;
 
 		mkdir "try" or die "cannot mkdir 'try': $!\n";
 		chdir "try" or die "cannot chdir to $path/try: $!\n";
 
 		# generate the archetype's application source
-		$now = time(); `echo $0: $now: $path: archetype:generate ... >>$log`;
+		if (-f $log) {
+			$now = time(); `echo $0: $now: $path: archetype:generate ... >>$log`;
+		}
 		print " archetype:generate ...";
 		`mvn -B archetype:generate -DarchetypeGroupId=com.liferay.faces.maven.archetypes -DarchetypeArtifactId=$artifactId -DarchetypeVersion=$ver -DgroupId=myGroupId -DartifactId=myArtifactId >>mvn_archetype_generate.log 2>>mvn_archetype_generate.log`;
 
@@ -383,7 +393,9 @@ for $a (@archs) {
 		if (-f "pom.xml") {
 
 			# build the application
-			$now = time(); `echo $0: $now: $path: clean package ... >>$log`;
+			if (-f $log) {
+				$now = time(); `echo $0: $now: $path: clean package ... >>$log`;
+			}
 			print " package ...";
 			# `mvn clean package >>mvn_clean_package.log 2>>mvn_clean_package.log`;
 			my $cmd = "mvn clean package >>mvn_clean_package.log 2>>mvn_clean_package.log";
@@ -397,7 +409,9 @@ for $a (@archs) {
 				next;
 			}
 
-			$now = time(); `echo $0: $now: $path: gradle init ... >>$log`;
+			if (-f $log) {
+				$now = time(); `echo $0: $now: $path: gradle init ... >>$log`;
+			}
 			print " gradle ...";
 			$cmd = "gradle init >>gradle_init.log 2>>gradle_init.log";
 			system($cmd);
@@ -414,7 +428,9 @@ for $a (@archs) {
 			if ($ARGV[0] and $ARGV[0] =~ /test/ ) {
 				if ($version eq "7.0.x" or $version eq "6.2.x" or $version eq "2.0.x" or $version eq "1.0.x") {
 
-					$now = time(); `echo $0: $now: $path: deploying ... >>$log`;
+					if (-f $log) {
+						$now = time(); `echo $0: $now: $path: deploying ... >>$log`;
+					}
 					print " deploy ...";
 					`cp target/*.war ${deployDir}/.`;
 					if ($container eq "liferay") {
@@ -427,12 +443,16 @@ for $a (@archs) {
 						&wait_for_webapp_deployment($now);
 					}
 
-					$now = time(); `echo $0: $now: $path: testing ... >>$log`;
+					if (-f $log) {
+						$now = time(); `echo $0: $now: $path: testing ... >>$log`;
+					}
 					print " test ...";
 					`mvn -Dtest=com.liferay.faces.test.MyArtifactIdTester test >>test.out 2>>test.out`;
 
 					print " undeploy ...";
-					$now = time(); `echo $0: $now: $path: removing the application ... >>$log`;
+					if (-f $log) {
+						$now = time(); `echo $0: $now: $path: removing the application ... >>$log`;
+					}
 					if ($container eq "liferay") {
 						`rm -rf ${servletImplDir}/webapps/myArtifactId-1.0-SNAPSHOT`;
 					}
