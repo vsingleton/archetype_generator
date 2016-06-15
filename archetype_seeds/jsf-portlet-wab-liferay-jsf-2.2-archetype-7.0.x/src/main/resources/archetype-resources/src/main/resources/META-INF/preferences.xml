@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+
+<portlet-preferences>
+	<preference>
+		<name>myPreferenceName</name>
+		<value>myPreferenceValue</value>
+	</preference>
+</portlet-preferences>
+

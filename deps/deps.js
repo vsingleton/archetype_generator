@@ -18,7 +18,7 @@ angular.module('liferay-faces-deps', [])
 			{ name: '1.0.x', jsfs: [jsfs[0], jsfs[1], jsfs[2]]},
 			{ name: '2.0.x', jsfs: [jsfs[0], jsfs[1]]},
 			{ name: '6.2.x', jsfs: [jsfs[0], jsfs[1]]},
-			{ name: '7.0.x', jsfs: [jsfs[0], jsfs[1]]}
+			{ name: '7.0.x', jsfs: [jsfs[1]]}
 		];
 
 		var servers = [
@@ -28,7 +28,8 @@ angular.module('liferay-faces-deps', [])
 		];
 
 		var servlets = [
-			{ name: 'tomcat', servers: servers }
+			{ name: 'war', servers: servers },
+			{ name: 'wab', servers: [servers[0]] }
 		];
 
 		var suites = [
