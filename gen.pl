@@ -9,7 +9,7 @@ my $portalsDir = "$ENV{'HOME'}/Portals/liferay.com";
 
 # set up Liferay for testing ...
 
-my $liferay7_0Version = "7.0.0-a2";
+my $liferay7_0Version = "7.0.1";
 my $liferay6_2Version = "6.2.3";
 
 my %liferayDir = ();
@@ -33,6 +33,10 @@ my $yet = 0;
 # remove all archetypes previously installed locally
 `rm -rf ~/.m2/archetype-catalog.xml`;
 `rm -rf ~/.m2/repository/com/liferay/faces/maven/archetypes/*`;
+`rm -rf ~/.m2/repository/com/liferay/faces/archetype/*`;
+
+my $archetypeGroupId="com.liferay.faces.maven.archetypes";
+   $archetypeGroupId="com.liferay.faces.archetype";
 
 # remove any stray war from previous run, just in case one is there ...
 `rm -rf ${apacheDir}/webapps/myArtifactId-1.0-SNAPSHOT.war`;
@@ -42,10 +46,18 @@ my $yet = 0;
 `rm -rf $liferayDir{$liferay6_2Version}/tomcat-*/webapps/myArtifactId-1.0-SNAPSHOT`;
 `rm -rf $liferayDir{$liferay7_0Version}/tomcat-*/webapps/myArtifactId-1.0-SNAPSHOT`;
 
-my @bundles = ("jee", "tomcat");
+my @bundles = ("war"); # war or wab?
 my @containers = ("webapp", "pluto", "liferay");
 my @jsfs = ("jsf-2.1", "jsf-2.2", "jsf-2.3");
-my @components = ("jsf", "liferay-faces-alloy", "liferay-faces-crystal", "primefaces", "richfaces", "icefaces");
+my @components = ("jsf", "liferay-faces-alloy", "liferay-faces-metal", "primefaces", "richfaces", "icefaces");
+
+my %suiteName = ();
+$suiteName{"jsf"} = "JSF";
+$suiteName{"primefaces"} = "PrimeFaces";
+$suiteName{"richfaces"} = "RichFaces";
+$suiteName{"icefaces"} = "ICEFaces";
+$suiteName{"liferay-faces-alloy"} = "Liferay Faces Alloy";
+$suiteName{"liferay-faces-metal"} = "Liferay Faces Metal";
 
 my %versions = ();
 @{$versions{"webapp"}} = ("1.0.x");
@@ -93,10 +105,10 @@ s/some/faces\/alloy/;
 $pre{"liferay-faces-alloy"} = $_;
 
 $_ = $prefix;
-s/PREFIX/crystal/;
+s/PREFIX/metal/;
 s/some.org/liferay.com/;
-s/some/faces\/crystal/;
-$pre{"liferay-faces-crystal"} = $_;
+s/some/faces\/metal/;
+$pre{"liferay-faces-metal"} = $_;
 
 # set up a template for a dependency
 my $dependency = <<'END_DEPENDENCY';
@@ -114,13 +126,13 @@ $comp{'jsf'} = "";
 $_ = $dependency;
 s/groupId>..*</groupId>org.primefaces</;
 s/artifactId>..*</artifactId>primefaces</;
-s/version>..*</version>5.3</;
+s/version>..*</version>6.0</;
 $comp{'primefaces'} = $_;
 
 $_ = $dependency;
 s/groupId>..*</groupId>org.richfaces</;
 s/artifactId>..*</artifactId>richfaces</;
-s/version>..*</version>4.5.6.Final</;
+s/version>..*</version>4.5.17.Final</;
 $comp{'richfaces'} = $_;
 
 $_ = $dependency;
@@ -132,7 +144,7 @@ $comp{'icefaces'} = $_;
 	$_ = $dependency;
 	s/groupId>..*</groupId>org.icefaces</;
 	s/artifactId>..*</artifactId>icefaces-ace</;
-	s/version>..*</version>3.3.0</;
+	s/version>..*</version>4.1.1</;
 	$comp{'icefaces'} .= $_;
 
 $_ = $dependency;
@@ -148,22 +160,22 @@ s/version>..*</version>2.0.0-SNAPSHOT</;
 $comp{'liferay-faces-alloy-reslib'} = $_;
 
 $_ = $dependency;
-s/groupId>..*</groupId>com.liferay.faces.crystal</;
-s/artifactId>..*</artifactId>liferay-faces-crystal</;
+s/groupId>..*</groupId>com.liferay.faces.metal</;
+s/artifactId>..*</artifactId>liferay-faces-metal</;
 s/version>..*</version>1.0.0-SNAPSHOT</;
-$comp{'liferay-faces-crystal'} = $_;
+$comp{'liferay-faces-metal'} = $_;
 
 $_ = $dependency;
-s/groupId>..*</groupId>com.liferay.faces.crystal</;
-s/artifactId>..*</artifactId>liferay-faces-crystal-reslib</;
+s/groupId>..*</groupId>com.liferay.faces.metal</;
+s/artifactId>..*</artifactId>liferay-faces-metal-reslib</;
 s/version>..*</version>1.0.0-SNAPSHOT</;
-$comp{'liferay-faces-crystal-reslib'} = $_;
+$comp{'liferay-faces-metal-reslib'} = $_;
 
 $_ = $dependency;
-s/groupId>..*</groupId>com.liferay.faces.crystal</;
-s/artifactId>..*</artifactId>liferay-faces-crystal-reslib</;
+s/groupId>..*</groupId>com.liferay.faces.metal</;
+s/artifactId>..*</artifactId>liferay-faces-metal-reslib</;
 s/version>..*</version>1.0.0-SNAPSHOT</;
-$comp{'liferay-faces-crystal-reslib'} = $_;
+$comp{'liferay-faces-metal-reslib'} = $_;
 
 $_ = $dependency;
 s/groupId>..*</groupId>javax.enterprise</;
@@ -188,14 +200,14 @@ $openPanel{"primefaces"} = "<p:panel id=\"$id\">";
 $openPanel{"icefaces"} = "<ace:panel id=\"$id\">";
 $openPanel{"richfaces"} = "<rich:panel id=\"$id\">";
 $openPanel{"liferay-faces-alloy"} = "<alloy:panel id=\"$id\">";
-$openPanel{"liferay-faces-crystal"} = "<crystal:panel id=\"$id\">";
+$openPanel{"liferay-faces-metal"} = "<metal:panel id=\"$id\">";
 
 $closePanel{"jsf"} = "</h:panelGroup>";
 $closePanel{"primefaces"} = "</p:panel>";
 $closePanel{"icefaces"} = "</ace:panel>";
 $closePanel{"richfaces"} = "</rich:panel>";
 $closePanel{"liferay-faces-alloy"} = "</alloy:panel>";
-$closePanel{"liferay-faces-crystal"} = "</crystal:panel>";
+$closePanel{"liferay-faces-metal"} = "</metal:panel>";
 
 # richfaces web.xml foo
 (my $webDotXmlFoo = q{
@@ -233,30 +245,40 @@ for $bundle (@bundles) {
 				for $jsf(@jsfs) {
 
 					# 1. applying filters
-					next if ($bundle eq "jee" and $jsf ne "jsf-2.1");
-					next if ($container eq "liferay" and $jsf eq "jsf-2.3");
-					next if ($version eq "7.1.x" and $jsf eq "jsf-2.1");
-					next if ($version eq "3.0.x" and $jsf eq "jsf-2.1");
-					next if ($version eq "2.0.x" and $jsf eq "jsf-2.3");
+					# next if ($bundle eq "jee" and $jsf ne "jsf-2.1");		# bundle is only war for now
+					next if ($version eq "7.1.x" and $jsf eq "jsf-2.1");		# not supported
+					# next if ($version eq "7.0.x" and $jsf eq "jsf-2.1");	# not supported yet ... uses bridge-impl-4.x
+					next if ($version eq "3.0.x" and $jsf eq "jsf-2.1");		# not considered
 
-					next if ($bundle eq "jee");
+					next if ($version eq "2.0.x" and $jsf eq "jsf-2.3");		# not supported yet
+					next if ($container eq "liferay" and $jsf eq "jsf-2.3"); # not supported yet
 
-					# next unless ($version eq "7.0.x"); # liferay 7.0 only
-					# next unless ($version eq "6.2.x"); # liferay 6.2 only
-					# next unless ($version eq "2.0.x"); # pluto 2.0 only
-					# next unless ($version eq "1.0.x"); # apache tomcat only
+					# next unless ($version eq "7.0.x");	# liferay 7.0 only
+					# next unless ($version eq "6.2.x");	# liferay 6.2 only
+					# next unless ($version eq "2.0.x");	# pluto 2.0 only
+					# next unless ($version eq "1.0.x");	# apache tomcat only
 
 					next unless (
-					 	$version eq "1.0.x" or
-						$version eq "2.0.x" or
+					 	# $version eq "1.0.x" or
+						# $version eq "2.0.x" or
 						$version eq "6.2.x" or
 						$version eq "7.0.x"
 					);
 
 					# next if ($component eq "icefaces");  # skip IceFaces
+					# next unless ($component =~ /jsf/);   # jsf only
 					# next unless ($component =~ /alloy/); # AlloyFaces only
 					# next unless ($component =~ /prime/); # PrimeFaces only
 					# next unless ($component =~ /rich/);  # RichFaces only
+					# next unless ($component =~ /prime/ or $component =~ /jsf/); # primefaces and jsf only
+					next unless (
+						$component =~ /jsf/		or
+						$component =~ /alloy/	or
+						$component =~ /metal/	or
+						$component =~ /ice/		or
+						$component =~ /prime/	or
+						$component =~ /rich/
+					);
 
 					# print "${component}-${bundle}-${container}" . (($version) ? "-" : "") . "${version}-${jsf}-archetype\n";
 					$arch{"${component} ${bundle} ${container} ${version} $jsf"} += 1;
@@ -279,15 +301,41 @@ mkpath("$dir");
 # Branch Artifact                           Liferay Bridge Portlet JSF
 # ------ ---------------------------------- ------- ------ ------- ---
 # 6.0.x  liferay-faces-bridge-ext-6.0.0.jar 7.1.x   5.0.x  3.0     2.2
-# master liferay-faces-bridge-ext-5.0.0.jar 7.0.x   4.0.x  2.0     2.2
+# master liferay-faces-bridge-ext.jar       7.0.x   4.0.x  2.0     2.2 ???   i   _ t   i      ???
+# 5.0.x  liferay-faces-bridge-ext-5.0.0.jar 7.0.x   4.0.x  2.0     2.2 ??? f   x     h   s    ???
 # 4.0.x  liferay-faces-bridge-ext-4.0.0.jar 7.0.x   3.0.x  2.0     2.1
 # 3.0.x  liferay-faces-bridge-ext-3.0.0.jar 6.2.x   4.0.x  2.0     2.2
 # 2.0.x  liferay-faces-bridge-ext-2.0.0.jar 6.2.x   3.0.x  2.0     2.1
 
+my %servlet_version = ();
+$servlet_version{"jsf-2.1"} = "2.5";
+$servlet_version{"jsf-2.2"} = "3.0";
+$servlet_version{"jsf-2.3"} = "3.0";
+
+my %web_app = ();
+$web_app{"jsf-2.1"} = "web-app_2_5.xsd";
+$web_app{"jsf-2.2"} = "web-app_3_0.xsd";
+$web_app{"jsf-2.3"} = "web-app_3_0.xsd";
+
+my %faces_version = ();
+$faces_version{"jsf-2.1"} = "2.1";
+$faces_version{"jsf-2.2"} = "2.2";
+$faces_version{"jsf-2.3"} = "2.3";
+
+my %web_facesconfig_version = ();
+$web_facesconfig_version{"jsf-2.1"} = "web-facesconfig_2_1.xsd";
+$web_facesconfig_version{"jsf-2.2"} = "web-facesconfig_2_2.xsd";
+$web_facesconfig_version{"jsf-2.3"} = "web-facesconfig_2_3.xsd";
+
+my %schema_sub_domain = ();
+$schema_sub_domain{"jsf-2.1"} = "java.sun.com";
+$schema_sub_domain{"jsf-2.2"} = "xmlns.jcp.org";
+$schema_sub_domain{"jsf-2.3"} = "xmlns.jcp.org";
+
 my %mojarra_version = ();
-$mojarra_version{"jsf-2.1"} = "2.1.29-04";
-$mojarra_version{"jsf-2.2"} = "2.2.12";
-$mojarra_version{"jsf-2.3"} = "2.3.0-m04-SNAPSHOT";
+$mojarra_version{"jsf-2.1"} = "2.1.29-05";
+$mojarra_version{"jsf-2.2"} = "2.2.13";
+$mojarra_version{"jsf-2.3"} = "2.3.0-m06-SNAPSHOT";
 
 my %impl_version = ();
 $impl_version{"jsf-2.1:2.0.x"} = "3.0.0-SNAPSHOT";
@@ -320,17 +368,25 @@ for $a (@archs) {
 
 	print "$component/$bundle/$container/$version/$jsf ...";
 
-	$artifactId = "${component}-" . (($container eq "webapp") ? "webapp" : "portlet-${container}") . "-${jsf}-archetype";
-	$name = "${component} " . (($container eq "webapp") ? "webapp" : "portlet ${container}") . " ${jsf} archetype";
-	$description = "Provides a " . ucfirst($container) . " archetype to create a " . $component . " component application.";
+	# old way
+	# $artifactId = "${component}-" . (($container eq "webapp") ? "webapp" : "portlet-${container}") . "-${jsf}-archetype";
 
-	$_ = $version;
-	s/\.x/.0-SNAPSHOT/;
-	$ver = $_;
+	# <artifactId>com.liferay.faces.archetype.jsf.portlet</artifactId>
+	$artifactId = "${archetypeGroupId}.${component}." . (($container eq "webapp") ? "webapp" : "portlet");
+
+	# <name>jsf-portlet</name>
+	$name = "${component}-" . (($container eq "webapp") ? "webapp" : "portlet");
+	# <version>5.0.0-SNAPSHOT</version>
+	# <description>Maven archetype for a Liferay JSF portlet</description>
+	$description = "Maven archetype for a " . ucfirst($container) . " " .
+		$suiteName{$component} . " " . (($container eq "webapp") ? "webapp" : "portlet");
+
+	$ver = $ext_version{"${jsf}:${version}"};
 
 	$_ = `pwd`; chomp;
 	my $here = $_;
 
+	# put the correct seed at the end of this path
 	mkpath "$path";
 	if ($container eq "webapp") {
 		$deployDir="${apacheDir}/webapps";
@@ -362,15 +418,23 @@ for $a (@archs) {
 		if (-f $log) {
 			$now = time(); `echo $0: $now: $path: building ... >>$log`;
 		}
-		`cp -pr archetype_seeds/jsf-portlet-liferay-$jsf-archetype-6.2.x/* $path/.`;
+		if ($version =~ /^6.2/) {
+			`cp -pr archetype_seeds/jsf-portlet-liferay-$jsf-archetype-6.2.x/* $path/.`;
+		}
+		if ($version =~ /^7.0/ and $jsf eq "jsf-2.1") {
+			`cp -pr archetype_seeds/jsf-portlet-liferay-jsf-2.2-archetype-7.0.x/* $path/.`;
+		}
+		if ($version =~ /^7.0/ and $jsf eq "jsf-2.2") {
+			`cp -pr archetype_seeds/jsf-portlet-liferay-jsf-2.2-archetype-7.0.x/* $path/.`;
+		}
 	}
 
-	# fix the archetype
+	# fix the archetype seed
 	find(\&fix, "$path");
 
 	# install the artifact, if any
 	chdir $path or die "cannot chdir to $path: $!\n";
-	if (-f "pom.xml") {
+	if (-f "pom.xml" and $ARGV[0] and $ARGV[0] =~ "install") {
 
 		# install the generated archetype
 		if (-f $log) {
@@ -386,7 +450,7 @@ for $a (@archs) {
 			$now = time(); `echo $0: $now: $path: archetype:generate ... >>$log`;
 		}
 		print " archetype:generate ...";
-		`mvn -B archetype:generate -DarchetypeGroupId=com.liferay.faces.maven.archetypes -DarchetypeArtifactId=$artifactId -DarchetypeVersion=$ver -DgroupId=myGroupId -DartifactId=myArtifactId >>mvn_archetype_generate.log 2>>mvn_archetype_generate.log`;
+		`mvn -B archetype:generate -DarchetypeGroupId=${archetypeGroupId} -DarchetypeArtifactId=$artifactId -DarchetypeVersion=$ver -DgroupId=myGroupId -DartifactId=myArtifactId >>mvn_archetype_generate.log 2>>mvn_archetype_generate.log`;
 
 		# build the application, if any
 		chdir "myArtifactId" or die "cannot chdir to $here/try/myArtifactId: $!\n";
@@ -405,21 +469,6 @@ for $a (@archs) {
 			# else { printf "child of $cmd exited with (" . $? . ") value => %d\n", $? >> 8; }
       	if ($? >> 8) {
 				print `grep ERROR mvn_clean_package.log | head -1` . "\n";
-				chdir $here or die "cannot chdir back to $here: $!\n";
-				next;
-			}
-
-			if (-f $log) {
-				$now = time(); `echo $0: $now: $path: gradle init ... >>$log`;
-			}
-			print " gradle ...";
-			$cmd = "gradle init >>gradle_init.log 2>>gradle_init.log";
-			system($cmd);
-			if ($? == -1) { print "failed to execute $cmd: $!\n"; }
-			elsif ($? & 127) { printf "child of $cmd died with signal %d, %s coredump\n", ($? & 127),  ($? & 128) ? 'with' : 'without'; }
-			# else { printf "child of $cmd exited with (" . $? . ") value => %d\n", $? >> 8; }
-			if ($? >> 8) {
-				print `grep -i ERROR gradle_init.log | head -1` . "\n";
 				chdir $here or die "cannot chdir back to $here: $!\n";
 				next;
 			}
@@ -470,6 +519,8 @@ for $a (@archs) {
 
 			print " done.\n";
 		}
+	} else {
+		print " done.\n";
 	}
 
 	chdir $here or die "cannot chdir back to $here: $!\n";
@@ -486,6 +537,7 @@ sub fix {
 		# print "    fixing: $File::Find::name\n";
 
 		# <groupId>com.liferay.faces.maven.archetypes</groupId>
+		# <groupId>com.liferay.faces.archetype</groupId>
 		# <artifactId>jsf-portlet-pluto-archetype</artifactId>
 
 		`perl -pi -e 's/^	<artifactId>..*</	<artifactId>$artifactId</g' $file`;
@@ -524,22 +576,37 @@ sub fix {
 	if ($file eq "pom.xml" and $File::Find::name =~ /archetype-resources/) {
 		# print "    fixing: $File::Find::name $key\n";
 
-# 		if (defined($ext_version{$key})) { 
-# 	      print "	$impl_version{$key} $ext_version{$key}\n";
-# 		} else {
-# 	      print "	$impl_version{$key}\n";
-# 		}
-
 		# <liferay.faces.bridge.impl.version>3.0.0-SNAPSHOT</liferay.faces.bridge.impl.version>
 		if ($container ne "webapp") {
 			`perl -pi -e 's/liferay.faces.bridge.impl.version>[34].0.0-SNAPSHOT</liferay.faces.bridge.impl.version>$impl_version{"$key"}</g' $file`;
 			# print `grep "liferay.faces.bridge.impl.version>" $file`;
 		}
 
-		# <liferay.faces.bridge.ext.version>2.0.0-SNAPSHOT</liferay.faces.bridge.ext.version>
+		# Assumes the following in the seed:
+		# faces.api.version>2.2<
+		# liferay.faces.bridge.ext.version>5.0.0-SNAPSHOT<
+		# liferay.faces.bridge.version>4.0.0-SNAPSHOT<
+		# mojarra.version>2.2.13<
 		if ($container eq "liferay") {
-			`perl -pi -e 's/liferay.faces.bridge.ext.version>[23].0.0-SNAPSHOT</liferay.faces.bridge.ext.version>$ext_version{"$key"}</g' $file`;
-			# print `grep "liferay.faces.bridge.ext.version>" $file`;
+
+			# <faces.api.version>2.2</faces.api.version>
+			# print "\nB: " . `grep "faces.api.version>" $file`;
+			`perl -pi -e 's/faces.api.version>2.2</faces.api.version>$faces_version{"$jsf"}</g' $file`;
+			# print "A: " . `grep "faces.api.version>" $file`;
+
+			# print "\nB: " . `grep "liferay.faces.bridge.ext.version>" $file`;
+			`perl -pi -e 's/liferay.faces.bridge.ext.version>5.0.0-SNAPSHOT</liferay.faces.bridge.ext.version>$ext_version{"$key"}</g' $file`;
+			# print "A: " . `grep "liferay.faces.bridge.ext.version>" $file`;
+
+			# <liferay.faces.bridge.version>4.0.0-SNAPSHOT</liferay.faces.bridge.version>
+			# print "\nB: " . `grep "liferay.faces.bridge.version>" $file`;
+			`perl -pi -e 's/liferay.faces.bridge.version>4.0.0-SNAPSHOT</liferay.faces.bridge.version>$impl_version{"$key"}</g' $file`;
+			# print "A: " . `grep "liferay.faces.bridge.version>" $file`;
+
+			# print "\nB: " . `grep "mojarra.version>" $file`;
+			`perl -pi -e 's/mojarra.version>2.2.13</mojarra.version>$mojarra_version{"$jsf"}</g' $file`;
+			# print "A: " . `grep "mojarra.version>" $file`;
+
 		}
 
 		# add dependency for any component suite
@@ -560,7 +627,7 @@ sub fix {
 			}
 
 			# <mojarra.version>2.1.29-04</mojarra.version>
-			`perl -pi -e 's/mojarra.version>2.1.29-04</mojarra.version>$mojarra_version{"$jsf"}</g' $file`;
+			`perl -pi -e 's/mojarra.version>[\\d\\.-SNAPSHOT]+</mojarra.version>$mojarra_version{"$jsf"}</g' $file`;
 
 			# SEVERE [localhost-startStop-7] com.sun.faces.config.ConfigureListener.contextInitialized Critical error during deployment: 
 			# java.lang.NoClassDefFoundError: javax/enterprise/context/spi/Contextual
@@ -611,7 +678,12 @@ sub fix {
 		$_ = $closePanel{"$component"};
 		s,/,\\/,g;
 		# print "    fixing: $File::Find::name $component $_\n";
-		`perl -pi -e 's/<ul/$_\n\t\t<ul/' $file`;
+		`perl -pi -e 's/<\\/h:body/\t$_\n\t<\\/h:body/' $file`;
+
+		if ($component eq "primefaces") {
+			# `perl -pi -e 's/<ul>/<ul>\n\t\t\t<li><em><h:outputText value="#\{bridgeContext.bridgeConfig.attributes\[PRIMEFACES\]\}" \/><\/em><\/li>/' $file`;
+			# `perl -pi -e "s/PRIMEFACES/'PRIMEFACES'/" $file`;
+		}
 
 	}
 
@@ -627,7 +699,33 @@ sub fix {
 		}
 	}
 
+	# assumes faces-config version="2.2"
+	if ($file eq "faces-config.xml") {
+		# <faces-config version="2.1"
+		# print "\nB: " . `grep "config version" $file`;
+		`perl -pi -e 's,faces-config version="2.2",faces-config version="$faces_version{$jsf}",' $file`;
+		# print "A: " . `grep "config version" $file`;
+
+		# web-facesconfig_2_2.xsd
+		# print "\nB: " . `grep "web-facesconfig" $file`;
+		`perl -pi -e 's,web-facesconfig_2_2.xsd,$web_facesconfig_version{$jsf},' $file`;
+		# print "A: " . `grep "web-facesconfig" $file`;
+
+		# print "\nB: " . `grep "schemaLocation" $file`;
+		`perl -pi -e 's,xmlns.jcp.org,$schema_sub_domain{$jsf},g' $file`;
+		# print "A: " . `grep "schemaLocation" $file`;
+	}
+
 	if ($file eq "web.xml") {
+
+		# print "\nB: " . `grep "schemaLocation" $file`;
+		`perl -pi -e 's,version="3.0",version="$servlet_version{$jsf}",' $file`;
+		# print "A: " . `grep "schemaLocation" $file`;
+
+		# print "\nB: " . `grep "schemaLocation" $file`;
+		`perl -pi -e 's,web-app_3_0.xsd,$web_app{$jsf},' $file`;
+		# print "A: " . `grep "schemaLocation" $file`;
+
 		if ($component eq "richfaces") {
 			`perl -pi -e 's,</web-app>,	$webDotXmlFoo\n</web-app>,' $file`;
 		}

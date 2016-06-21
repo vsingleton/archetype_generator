@@ -18,7 +18,7 @@
 			ng-options="suite.name for suite in data.suites track by suite.name"
 			ng-model="data.suite"><option style="display:none" value="">select</option></select>
 	</div>
-	<div>
+	<div style="display:none" >
 		<label for="suiteSelectId">Servlet:</label>
 		<select name="servletSelectName" id="servletSelectId" ng-disabled="!data.suite.servlets"
 			ng-options="servlet.name for servlet in data.suite.servlets track by servlet.name"
@@ -42,15 +42,10 @@
 			ng-options="jsf.name for jsf in data.version.jsfs track by jsf.name"
 			ng-model="data.jsf"><option style="display:none" value="">select</option></select>
 	</div>
-	<div>
-		<label for="buildSelectId">Build:</label>
-		<select name="buildSelectName" id="buildSelectId" ng-disabled="!data.jsf.builds"
-			ng-options="build.name for build in data.jsf.builds track by build.name"
-			ng-model="data.build"><option style="display:none" value="">select</option></select>
-	</div>
 	</form>
 	<h2>{{data.suite.name}}/{{data.servlet.name}}/{{data.server.name}}/{{data.version.name}}/{{data.jsf.name}}</h2>
-	<h2><a href="/deps/archetypes/{{data.suite.name}}/{{data.servlet.name}}/{{data.server.name}}/{{data.version.name}}/{{data.jsf.name}}/try/myArtifactId/{{data.build.name}}">{{data.build.name}}</a></h2>
+	<h2 ng-hide="!data.version.jsfs"><a href="/deps/archetypes/{{data.suite.name}}/{{data.servlet.name}}/{{data.server.name}}/{{data.version.name}}/{{data.jsf.name}}/try/myArtifactId/pom.xml">{{data.jsf.name}} pom.xml</a></h2>
 	</div>
 </body>
 </html>
+

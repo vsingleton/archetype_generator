@@ -17,20 +17,19 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
 public class MyArtifactIdTester {
 
-	private String guestUrl = "http://localhost:9080/web/guest";
+	private String guestUrl = "http://localhost:8080/web/guest";
 	private String url;
-
 	private WebClient webClient;
 
 	@Test
 	public void myArtifactIdTest() throws Exception {
 
-		url = guestUrl + "/arch";
+		url = guestUrl + "/home";
 
 		HtmlPage initialPage = webClient.getPage(url);
 		webClient.waitForBackgroundJavaScript(100);
 
-		String magic = "Hello myArtifactId!";
+		String expectedText = "Hello myArtifactId!";
 		String panelXpath = "//div[contains(@id,':panelId')]";
 
 		HtmlDivision div = initialPage.getFirstByXPath(panelXpath);
@@ -38,8 +37,8 @@ public class MyArtifactIdTester {
 			div != null);
 
 		System.out.println("div.getTextContent() = " + div.getTextContent());
-		assertTrue("div should contain text '" + magic + "', but contains '" + div.getTextContent() + "'",
-			div.getTextContent().contains(magic));
+		assertTrue("div should contain text '" + expectedText + "', but contains '" + div.getTextContent() + "'",
+			div.getTextContent().contains(expectedText));
 
 	}
 
