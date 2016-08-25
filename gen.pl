@@ -9,8 +9,8 @@ my $portalsDir = "$ENV{'HOME'}/Portals/liferay.com";
 
 # set up Liferay for testing ...
 
-my $liferay7_0Version = "7.0.1";
-my $liferay6_2Version = "6.2.3";
+my $liferay7_0Version = "7.0.2";
+my $liferay6_2Version = "6.2.5";
 
 my %liferayDir = ();
 $liferayDir{"$liferay6_2Version"} = "${portalsDir}/liferay-portal-${liferay6_2Version}";
@@ -35,16 +35,15 @@ my $yet = 0;
 `rm -rf ~/.m2/repository/com/liferay/faces/maven/archetypes/*`;
 `rm -rf ~/.m2/repository/com/liferay/faces/archetype/*`;
 
-my $archetypeGroupId="com.liferay.faces.maven.archetypes";
-   $archetypeGroupId="com.liferay.faces.archetype";
+my $archetypeGroupId="com.liferay.faces.archetype";
 
 # remove any stray war from previous run, just in case one is there ...
 `rm -rf ${apacheDir}/webapps/myArtifactId-1.0-SNAPSHOT.war`;
 `rm -rf ${apacheDir}/webapps/myArtifactId-1.0-SNAPSHOT`;
-`rm -rf ${plutoDir}/tomcat-7.0.42/webapps/myArtifactId-1.0-SNAPSHOT.war`;
-`rm -rf ${plutoDir}/tomcat-7.0.42/webapps/myArtifactId-1.0-SNAPSHOT`;
-`rm -rf $liferayDir{$liferay6_2Version}/tomcat-*/webapps/myArtifactId-1.0-SNAPSHOT`;
-`rm -rf $liferayDir{$liferay7_0Version}/tomcat-*/webapps/myArtifactId-1.0-SNAPSHOT`;
+`rm -rf ${plutoDir}/tomcat-*/webapps/myArtifactId*.war`;
+`rm -rf ${plutoDir}/tomcat-*/webapps/myArtifactId*`;
+`rm -rf $liferayDir{$liferay6_2Version}/tomcat-*/webapps/myArtifactId*`;
+`rm -rf $liferayDir{$liferay7_0Version}/tomcat-*/webapps/myArtifactId*`;
 
 my @bundles = ("war"); # war or wab?
 my @containers = ("webapp", "pluto", "liferay");
@@ -56,8 +55,15 @@ $suiteName{"jsf"} = "JSF";
 $suiteName{"primefaces"} = "PrimeFaces";
 $suiteName{"richfaces"} = "RichFaces";
 $suiteName{"icefaces"} = "ICEFaces";
-$suiteName{"liferay-faces-alloy"} = "Liferay Faces Alloy";
-$suiteName{"liferay-faces-metal"} = "Liferay Faces Metal";
+$suiteName{"liferay-faces-alloy"} = "Faces Alloy";
+$suiteName{"liferay-faces-metal"} = "Faces Metal";
+
+my %productName = ();
+$productName{"primefaces"} = "PRIMEFACES";
+$productName{"richfaces"} = "RICHFACES";
+$productName{"icefaces"} = "ICEFACES";
+$productName{"liferay-faces-alloy"} = "LIFERAY_FACES_ALLOY";
+$productName{"liferay-faces-metal"} = "LIFERAY_FACES_METAL";
 
 my %versions = ();
 @{$versions{"webapp"}} = ("1.0.x");
@@ -69,6 +75,7 @@ my($bundle,$component,$container,$version,$jsf);
 # set up a template for a prefix
 my $prefix = "xmlns:PREFIX=\"http://some.org/some\"";
 
+# initialize a hash witht he prefix namespace for each component suite
 my %pre = ();
 $pre{"jsf"} = "";
 
@@ -119,7 +126,7 @@ my $dependency = <<'END_DEPENDENCY';
 		</dependency>
 END_DEPENDENCY
 
-# define some dependencies for the component suites
+# initialize a hash with dependencies for each of the component suites
 my %comp = ();
 $comp{'jsf'} = "";
 
@@ -136,44 +143,26 @@ s/version>..*</version>4.5.17.Final</;
 $comp{'richfaces'} = $_;
 
 $_ = $dependency;
-s/groupId>..*</groupId>org.icefaces</;
-s/artifactId>..*</artifactId>icefaces</;
-s/version>..*</version>3.3.0</;
-$comp{'icefaces'} = $_;
-
-	$_ = $dependency;
-	s/groupId>..*</groupId>org.icefaces</;
-	s/artifactId>..*</artifactId>icefaces-ace</;
-	s/version>..*</version>4.1.1</;
-	$comp{'icefaces'} .= $_;
-
-$_ = $dependency;
-s/groupId>..*</groupId>com.liferay.faces.alloy</;
-s/artifactId>..*</artifactId>liferay-faces-alloy</;
-s/version>..*</version>2.0.0-SNAPSHOT</;
+s/groupId>..*</groupId>com.liferay.faces</;
+s/artifactId>..*</artifactId>com.liferay.faces.alloy</;
+s/version>..*</version>3.0.0-SNAPSHOT</;
 $comp{'liferay-faces-alloy'} = $_;
 
 $_ = $dependency;
-s/groupId>..*</groupId>com.liferay.faces.alloy</;
-s/artifactId>..*</artifactId>liferay-faces-alloy-reslib</;
-s/version>..*</version>2.0.0-SNAPSHOT</;
+s/groupId>..*</groupId>com.liferay.faces</;
+s/artifactId>..*</artifactId>com.liferay.faces.alloy.reslib</;
+s/version>..*</version>3.0.0-SNAPSHOT</;
 $comp{'liferay-faces-alloy-reslib'} = $_;
 
 $_ = $dependency;
-s/groupId>..*</groupId>com.liferay.faces.metal</;
-s/artifactId>..*</artifactId>liferay-faces-metal</;
+s/groupId>..*</groupId>com.liferay.faces</;
+s/artifactId>..*</artifactId>com.liferay.faces.metal</;
 s/version>..*</version>1.0.0-SNAPSHOT</;
 $comp{'liferay-faces-metal'} = $_;
 
 $_ = $dependency;
-s/groupId>..*</groupId>com.liferay.faces.metal</;
-s/artifactId>..*</artifactId>liferay-faces-metal-reslib</;
-s/version>..*</version>1.0.0-SNAPSHOT</;
-$comp{'liferay-faces-metal-reslib'} = $_;
-
-$_ = $dependency;
-s/groupId>..*</groupId>com.liferay.faces.metal</;
-s/artifactId>..*</artifactId>liferay-faces-metal-reslib</;
+s/groupId>..*</groupId>com.liferay.faces</;
+s/artifactId>..*</artifactId>com.liferay.faces.metal.reslib</;
 s/version>..*</version>1.0.0-SNAPSHOT</;
 $comp{'liferay-faces-metal-reslib'} = $_;
 
@@ -190,11 +179,100 @@ s/artifactId>..*</artifactId>liferay-faces-util</;
 s/version>..*</version>3.0.0-SNAPSHOT</;
 $comp{'liferay-faces-util'} = $_;
 
+# icefaces
+
+# <!-- Note: icefaces-compat required due to http://jira.icesoft.org/browse/ICE-8444 -->
+# <dependency>
+# 	<groupId>org.icefaces</groupId>
+# 	<artifactId>icefaces-compat</artifactId>
+# </dependency>
+
+my $dependencyNoVersion = <<'END_DEPENDENCY';
+		<dependency>
+			<groupId>com.some.co</groupId>
+			<artifactId>some-impl</artifactId>
+		</dependency>
+END_DEPENDENCY
+
+$_ = $dependencyNoVersion;
+s/groupId>..*</groupId>org.icefaces</;
+s/artifactId>..*</artifactId>icefaces</;
+$comp{'icefaces'} = $_;
+
+        $_ = $dependencyNoVersion;
+        s/groupId>..*</groupId>org.icefaces</;
+        s/artifactId>..*</artifactId>icefaces-ace</;
+        $comp{'icefaces'} .= $_;
+
+        $comp{'icefaces'} .= "ICEFACES_COMPAT_DEPENDENCY";
+
+$_ = $dependencyNoVersion;
+s/groupId>..*</groupId>org.icefaces</;
+s/artifactId>..*</artifactId>icefaces-compat</;
+$comp{'icefaces-compat-dependency'} = "		<!-- Note: icefaces-compat required due to http://jira.icesoft.org/browse/ICE-8444 -->\n" . $_;
+
+$_ = $dependency;
+s/groupId>..*</groupId>org.icefaces</;
+s/artifactId>..*</artifactId>icefaces-compat</;
+s/version>..*</version>3.3.0</;
+s/	</		</g;
+$comp{'icefaces-compat-version'} = $_;
+
+# set up a template for the icefaces dependencies
+my $dependencyManagement = <<'END_DEPENDENCY';
+	</dependencies>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.icefaces</groupId>
+				<artifactId>icefaces</artifactId>
+				<version>icefacesVersion</version>
+				<exclusions>
+					<exclusion>
+						<groupId>org.glassfish</groupId>
+						<artifactId>javax.faces</artifactId>
+					</exclusion>
+					<exclusion>
+						<groupId>javax.mail</groupId>
+						<artifactId>mail</artifactId>
+					</exclusion>
+					<exclusion>
+						<groupId>javax.activation</groupId>
+						<artifactId>javax.activation</artifactId>
+					</exclusion>
+				</exclusions>
+			</dependency>
+			<dependency>
+				<groupId>org.icefaces</groupId>
+				<artifactId>icefaces-ace</artifactId>
+				<version>icefacesVersion</version>
+			</dependency>ICEFACES_COMPAT_VERSION
+			<dependency>
+				<groupId>org.icepush</groupId>
+				<artifactId>icepush</artifactId>
+				<version>icefacesVersion</version>
+				<exclusions>
+					<exclusion>
+						<artifactId>jsp-api</artifactId>
+						<groupId>javax.servlet.jsp</groupId>
+					</exclusion>
+				</exclusions>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+END_DEPENDENCY
+
+$_ = $dependencyManagement;
+s/version>..*</version>4.1.1</g;
+$comp{'icefaces'} .= $_;
+
+
 # set up a template for a component to be included from the component suite, if any
 my $id = "panelId";
 my %openPanel = ();
 my %closePanel = ();
 
+# initialize a hash with the open tag for the component for each component suite
 $openPanel{"jsf"} = "<h:panelGroup id=\"$id\" styleClass=\"\$\{artifactId\}-hello-world\" layout=\"block\">";
 $openPanel{"primefaces"} = "<p:panel id=\"$id\">";
 $openPanel{"icefaces"} = "<ace:panel id=\"$id\">";
@@ -202,6 +280,7 @@ $openPanel{"richfaces"} = "<rich:panel id=\"$id\">";
 $openPanel{"liferay-faces-alloy"} = "<alloy:panel id=\"$id\">";
 $openPanel{"liferay-faces-metal"} = "<metal:panel id=\"$id\">";
 
+# initialize a hash with the closing tag for the component for each component suite
 $closePanel{"jsf"} = "</h:panelGroup>";
 $closePanel{"primefaces"} = "</p:panel>";
 $closePanel{"icefaces"} = "</ace:panel>";
@@ -232,7 +311,7 @@ $closePanel{"liferay-faces-metal"} = "</metal:panel>";
 
 }) =~ s/^ {8}//mg;
 
-# iterate over our dimensions of the archetypes to generate a list of all our archetypes
+# iterate over our dimensions of the archetypes to generate a hash of all our archetypes
 my %arch = ();
 
 # $ echo "2 bundles * 3 contianers * 6? versions * 6 component suites * 3 versions of jsf" | bc
@@ -267,7 +346,7 @@ for $bundle (@bundles) {
 
 					# next if ($component eq "icefaces");  # skip IceFaces
 					# next unless ($component =~ /jsf/);   # jsf only
-					# next unless ($component =~ /alloy/); # AlloyFaces only
+					# next unless ($component =~ /alloy/); # Alloy only
 					# next unless ($component =~ /prime/); # PrimeFaces only
 					# next unless ($component =~ /rich/);  # RichFaces only
 					# next unless ($component =~ /prime/ or $component =~ /jsf/); # primefaces and jsf only
@@ -372,10 +451,17 @@ for $a (@archs) {
 	# $artifactId = "${component}-" . (($container eq "webapp") ? "webapp" : "portlet-${container}") . "-${jsf}-archetype";
 
 	# <artifactId>com.liferay.faces.archetype.jsf.portlet</artifactId>
-	$artifactId = "${archetypeGroupId}.${component}." . (($container eq "webapp") ? "webapp" : "portlet");
-
 	# <name>jsf-portlet</name>
-	$name = "${component}-" . (($container eq "webapp") ? "webapp" : "portlet");
+	if ($component =~ /liferay-faces-/) {
+		$_ = $component;
+		s/liferay-faces-//;
+		$artifactId = "${archetypeGroupId}.${_}." . (($container eq "webapp") ? "webapp" : "portlet");
+		$name = "${_}-" . (($container eq "webapp") ? "webapp" : "portlet");
+	} else {
+		$artifactId = "${archetypeGroupId}.${component}." . (($container eq "webapp") ? "webapp" : "portlet");
+		$name = "${component}-" . (($container eq "webapp") ? "webapp" : "portlet");
+	}
+
 	# <version>5.0.0-SNAPSHOT</version>
 	# <description>Maven archetype for a Liferay JSF portlet</description>
 	$description = "Maven archetype for a " . ucfirst($container) . " " .
@@ -418,15 +504,47 @@ for $a (@archs) {
 		if (-f $log) {
 			$now = time(); `echo $0: $now: $path: building ... >>$log`;
 		}
-		if ($version =~ /^6.2/) {
-			`cp -pr archetype_seeds/jsf-portlet-liferay-$jsf-archetype-6.2.x/* $path/.`;
+
+		if ($jsf eq "jsf-2.1") {
+			if ($version =~ /^6.2/) {
+				`cp -pr $ENV{"HOME"}/Projects/liferay.com/liferay-faces/liferay-faces-bridge-ext-2.x/archetype/jsf-portlet/pom.xml $path/.`;
+				`cp -pr $ENV{"HOME"}/Projects/liferay.com/liferay-faces/liferay-faces-bridge-ext-2.x/archetype/jsf-portlet/src $path/.`;
+			}
+			if ($version =~ /^7.0/) {
+				`cp -pr $ENV{"HOME"}/Projects/liferay.com/liferay-faces/liferay-faces-bridge-ext-4.x/archetype/jsf-portlet/pom.xml $path/.`;
+				`cp -pr $ENV{"HOME"}/Projects/liferay.com/liferay-faces/liferay-faces-bridge-ext-4.x/archetype/jsf-portlet/src $path/.`;
+			}
 		}
-		if ($version =~ /^7.0/ and $jsf eq "jsf-2.1") {
-			`cp -pr archetype_seeds/jsf-portlet-liferay-jsf-2.2-archetype-7.0.x/* $path/.`;
+		if ($jsf eq "jsf-2.2") {
+			if ($version =~ /^6.2/) {
+				`cp -pr $ENV{"HOME"}/Projects/liferay.com/liferay-faces/liferay-faces-bridge-ext-3.x/archetype/jsf-portlet/pom.xml $path/.`;
+				`cp -pr $ENV{"HOME"}/Projects/liferay.com/liferay-faces/liferay-faces-bridge-ext-3.x/archetype/jsf-portlet/src $path/.`;
+			}
+			if ($version =~ /^7.0/) {
+				`cp -pr $ENV{"HOME"}/Projects/liferay.com/liferay-faces/liferay-faces-bridge-ext-5.x/archetype/jsf-portlet/pom.xml $path/.`;
+				`cp -pr $ENV{"HOME"}/Projects/liferay.com/liferay-faces/liferay-faces-bridge-ext-5.x/archetype/jsf-portlet/src $path/.`;
+			}
 		}
-		if ($version =~ /^7.0/ and $jsf eq "jsf-2.2") {
-			`cp -pr archetype_seeds/jsf-portlet-liferay-jsf-2.2-archetype-7.0.x/* $path/.`;
+		if ($jsf eq "jsf-2.3") {
+			if ($version =~ /^6.2/) {
+				`cp -pr $ENV{"HOME"}/Projects/liferay.com/liferay-faces/liferay-faces-bridge-ext/archetype/jsf-portlet/pom.xml $path/.`;
+				`cp -pr $ENV{"HOME"}/Projects/liferay.com/liferay-faces/liferay-faces-bridge-ext/archetype/jsf-portlet/src $path/.`;
+			}
+			if ($version =~ /^7.0/) {
+				`cp -pr $ENV{"HOME"}/Projects/liferay.com/liferay-faces/liferay-faces-bridge-ext/archetype/jsf-portlet/pom.xml $path/.`;
+				`cp -pr $ENV{"HOME"}/Projects/liferay.com/liferay-faces/liferay-faces-bridge-ext/archetype/jsf-portlet/src $path/.`;
+			}
 		}
+
+		# if ($version =~ /^6.2/) {
+		# 	`cp -pr archetype_seeds/jsf-portlet-liferay-$jsf-archetype-6.2.x/* $path/.`;
+		# }
+		# if ($version =~ /^7.0/ and $jsf eq "jsf-2.1") {
+		# 	`cp -pr archetype_seeds/jsf-portlet-liferay-jsf-2.2-archetype-7.0.x/* $path/.`;
+		# }
+		# if ($version =~ /^7.0/ and $jsf eq "jsf-2.2") {
+		# 	`cp -pr archetype_seeds/jsf-portlet-liferay-jsf-2.2-archetype-7.0.x/* $path/.`;
+		# }
 	}
 
 	# fix the archetype seed
@@ -611,10 +729,44 @@ sub fix {
 
 		# add dependency for any component suite
 		$_ = $comp{"$component"};
-		s,/,\\/,g;
-		s,<,\\<,g;
-		s,>,\\>,g;
-		`perl -pi -e 's/.<\\/dependencies>/$_	<\\/dependencies>/g' $file`;
+
+		# if liferay 6.2 and alloy is the component suite, then switch to version 2
+		if ($version =~ /^6.2/ and $comp{"$component"} =~ /alloy/) {
+			s/>3./>2./;
+			# print "comp => $_\n";
+		}
+
+		# When there is a dependencyManagement section ... remove the /dependencies tag
+		if ($comp{"$component"} =~ /icefaces/) {
+
+			if ($jsf eq "jsf-2.1") { 
+
+				s/ICEFACES_COMPAT_DEPENDENCY/$comp{'icefaces-compat-dependency'}/;
+				s/ICEFACES_COMPAT_VERSION/\n$comp{'icefaces-compat-version'}/;
+
+				s/4.1.1/3.3.0/g;
+
+			} else {
+
+				s/ICEFACES_COMPAT_DEPENDENCY//;
+				s/ICEFACES_COMPAT_VERSION//;
+
+			}
+
+			s,/,\\/,g;
+			s,<,\\<,g;
+			s,>,\\>,g;
+
+			`perl -pi -e 's/.<\\/dependencies>\n/$_/g' $file`;
+
+		} else {
+
+			s,/,\\/,g;
+			s,<,\\<,g;
+			s,>,\\>,g;
+
+			`perl -pi -e 's/.<\\/dependencies>/$_	<\\/dependencies>/g' $file`;
+		}
 
 		if ($container eq "webapp") {
 
@@ -645,6 +797,12 @@ sub fix {
 		# add reslib dependency if necessary
 		if ($component =~ /liferay/ and $container eq "webapp") {
 			$_ = $comp{"${component}-reslib"};
+
+			if ($version =~ /^6.2/ and $comp{"$component"} =~ />2./) {
+				s/>3./>2./;
+				# print "comp => $_\n";
+			}
+
 			s,/,\\/,g;
 			s,<,\\<,g;
 			s,>,\\>,g;
@@ -665,7 +823,9 @@ sub fix {
 		s,/,\\/,g;
 
 		# print "    fixing: $File::Find::name $component $_\n";
-		`perl -pi -e 's/^>/	$_\n>/g' $file`;
+		if ($component ne "jsf") {
+			`perl -pi -e 's/^>/	$_\n>/g' $file`;
+		}
 
 		# wrap the hello world text with a panel from the component suite
 		$_ = $openPanel{"$component"};
@@ -673,16 +833,19 @@ sub fix {
 		s,\},\\},g;
 		s,\$,\\\$,g;
 		# print "    fixing: $File::Find::name $component $_\n";
-		`perl -pi -e 's/<h:outputText style/$_\n\t\t\t<h:outputText style/' $file`;
+		# `perl -pi -e 's/<h:outputText style/$_\n\t\t\t<h:outputText style/' $file`;
+		`perl -pi -e 's/<h:panelGroup..*>/$_/' $file`;
 
 		$_ = $closePanel{"$component"};
 		s,/,\\/,g;
 		# print "    fixing: $File::Find::name $component $_\n";
-		`perl -pi -e 's/<\\/h:body/\t$_\n\t<\\/h:body/' $file`;
+		# `perl -pi -e 's/<\\/h:body/\t$_\n\t<\\/h:body/' $file`;
+		`perl -pi -e 's/<\\/h:panelGroup>/$_/' $file`;
 
-		if ($component eq "primefaces") {
-			# `perl -pi -e 's/<ul>/<ul>\n\t\t\t<li><em><h:outputText value="#\{bridgeContext.bridgeConfig.attributes\[PRIMEFACES\]\}" \/><\/em><\/li>/' $file`;
-			# `perl -pi -e "s/PRIMEFACES/'PRIMEFACES'/" $file`;
+		# <li><em><h:outputText value="#{product.LIFERAY_FACES_ALLOY}" /></em></li>
+		my $li = '<li><em><h:outputText value="#{product.PRODUCT_NAME}" /></em></li>';
+		if ($component ne "jsf") {
+			`perl -pi -e 's/<\\/ul>/	<li><em><h:outputText value="#{product.$productName{$component}}" \\/><\\/em><\\/li>\n		<\\/ul>/' $file`;
 		}
 
 	}
