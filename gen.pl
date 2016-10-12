@@ -3,6 +3,9 @@
 use strict;
 use File::Path;
 use File::Find;
+use XML::Simple;
+use File::Slurp;
+# use Data::Dumper;
 
 my $httpdsDir = "$ENV{'HOME'}/httpds";
 my $portalsDir = "$ENV{'HOME'}/Portals/liferay.com";
@@ -126,60 +129,96 @@ my $dependency = <<'END_DEPENDENCY';
 		</dependency>
 END_DEPENDENCY
 
+my $gradleDependency = "compile group: 'G', name: 'A', version:'V'";
+
 # initialize a hash with dependencies for each of the component suites
 my %comp = ();
 $comp{'jsf'} = "";
 
+my $gradle_repository = 'maven { url "URL" }';
+my %gradle_repo = ();
+
+my %gradle_comp = ();
+$gradle_comp{'jsf'} = "";
+
+my $agnosticVersion = "";
+
+# primefaces
+$_ = $gradle_repository; s,URL,http://repository.primefaces.org,; $gradle_repo{'primefaces'} = $_;
+$agnosticVersion = "6.0";
 $_ = $dependency;
 s/groupId>..*</groupId>org.primefaces</;
 s/artifactId>..*</artifactId>primefaces</;
-s/version>..*</version>6.0</;
+s/version>..*</version>$agnosticVersion</;
 $comp{'primefaces'} = $_;
+$_ = $gradleDependency; s/G/org.primefaces/; s/A/primefaces/; s/V/$agnosticVersion/; $gradle_comp{'primefaces'} = $_;
 
+# richfaces
+$agnosticVersion = "4.5.17.Final";
 $_ = $dependency;
 s/groupId>..*</groupId>org.richfaces</;
 s/artifactId>..*</artifactId>richfaces</;
-s/version>..*</version>4.5.17.Final</;
+s/version>..*</version>$agnosticVersion</;
 $comp{'richfaces'} = $_;
+$_ = $gradleDependency; s/G/org.richfaces/; s/A/richfaces/; s/V/$agnosticVersion/; $gradle_comp{'richfaces'} = $_;
 
+# alloy
+$agnosticVersion = "3.0.0";
 $_ = $dependency;
 s/groupId>..*</groupId>com.liferay.faces</;
 s/artifactId>..*</artifactId>com.liferay.faces.alloy</;
-s/version>..*</version>3.0.0-SNAPSHOT</;
+s/version>..*</version>$agnosticVersion</;
 $comp{'liferay-faces-alloy'} = $_;
+$_ = $gradleDependency; s/G/com.liferay.faces/; s/A/com.liferay.faces.alloy/; s/V/$agnosticVersion/; $gradle_comp{'liferay-faces-alloy'} = $_;
 
+# alloy.reslib
+$agnosticVersion = "3.0.0";
 $_ = $dependency;
 s/groupId>..*</groupId>com.liferay.faces</;
 s/artifactId>..*</artifactId>com.liferay.faces.alloy.reslib</;
-s/version>..*</version>3.0.0-SNAPSHOT</;
+s/version>..*</version>$agnosticVersion</;
 $comp{'liferay-faces-alloy-reslib'} = $_;
+$_ = $gradleDependency; s/G/com.liferay.faces/; s/A/com.liferay.faces.alloy.reslib/; s/V/$agnosticVersion/; $gradle_comp{'liferay-faces-alloy-reslib'} = $_;
 
+# metal
+$agnosticVersion = "1.0.0-SNAPSHOT";
 $_ = $dependency;
 s/groupId>..*</groupId>com.liferay.faces</;
 s/artifactId>..*</artifactId>com.liferay.faces.metal</;
-s/version>..*</version>1.0.0-SNAPSHOT</;
+s/version>..*</version>$agnosticVersion</;
 $comp{'liferay-faces-metal'} = $_;
+$_ = $gradleDependency; s/G/com.liferay.faces/; s/A/com.liferay.faces.metal/; s/V/$agnosticVersion/; $gradle_comp{'liferay-faces-metal'} = $_;
 
+# metal.reslib
+$agnosticVersion = "1.0.0-SNAPSHOT";
 $_ = $dependency;
 s/groupId>..*</groupId>com.liferay.faces</;
 s/artifactId>..*</artifactId>com.liferay.faces.metal.reslib</;
-s/version>..*</version>1.0.0-SNAPSHOT</;
+s/version>..*</version>$agnosticVersion</;
 $comp{'liferay-faces-metal-reslib'} = $_;
+$_ = $gradleDependency; s/G/com.liferay.faces/; s/A/com.liferay.faces.metal.reslib/; s/V/$agnosticVersion/; $gradle_comp{'liferay-faces-metal-reslib'} = $_;
 
+# cdi-api
+$agnosticVersion = "1.2";
 $_ = $dependency;
 s/groupId>..*</groupId>javax.enterprise</;
 s/artifactId>..*</artifactId>cdi-api</;
-s/version>..*</version>1.2</;
+s/version>..*</version>$agnosticVersion</;
 $comp{'cdi-api'} = $_;
+$_ = $gradleDependency; s/G/javax.enterprise/; s/A/cdi-api/; s/V/$agnosticVersion/; $gradle_comp{'cdi-api'} = $_;
 
-# com.liferay.faces.util:liferay-faces-util:jar:3.0.0-SNAPSHOT:compile
+# liferay-faces-util:jar:3.0.0:compile
+$agnosticVersion = "3.0.0";
 $_ = $dependency;
 s/groupId>..*</groupId>com.liferay.faces.util</;
 s/artifactId>..*</artifactId>liferay-faces-util</;
-s/version>..*</version>3.0.0-SNAPSHOT</;
+s/version>..*</version>$agnosticVersion</;
 $comp{'liferay-faces-util'} = $_;
+$_ = $gradleDependency; s/G/com.liferay.faces.util/; s/A/liferay-faces-util/; s/V/$agnosticVersion/; $gradle_comp{'liferay-faces-util'} = $_;
 
 # icefaces
+
+$_ = $gradle_repository; s,URL,http://anonsvn.icefaces.org/repo/maven2/releases/,; $gradle_repo{'icefaces'} = $_;
 
 # <!-- Note: icefaces-compat required due to http://jira.icesoft.org/browse/ICE-8444 -->
 # <dependency>
@@ -217,6 +256,8 @@ s/artifactId>..*</artifactId>icefaces-compat</;
 s/version>..*</version>3.3.0</;
 s/	</		</g;
 $comp{'icefaces-compat-version'} = $_;
+
+$agnosticVersion = "4.1.1";
 
 # set up a template for the icefaces dependencies
 my $dependencyManagement = <<'END_DEPENDENCY';
@@ -266,14 +307,26 @@ $_ = $dependencyManagement;
 s/version>..*</version>4.1.1</g;
 $comp{'icefaces'} .= $_;
 
+my $gradle_dependencyManagement = <<'END_DEPENDENCY';
+compile('org.icefaces:icefaces:ICE_VERSION') {
+        exclude group: 'org.glassfish', module: 'javax.faces'
+        exclude group: 'javax.mail', module: 'mail'
+        exclude group: 'javax.activation', module: 'javax.activation'
+    }
+    compile group: 'org.icefaces', name: 'icefaces-ace', version:'ICE_VERSION'ICEFACES_COMPAT_VERSION
+END_DEPENDENCY
+# $_ = $gradleDependency; s/G/org.icefaces/; s/A/icefaces-ace/; s/V/$agnosticVersion/; $gradle_comp{'icefaces'} = $_;
+$_ = $gradle_dependencyManagement;
+s/ICE_VERSION/4.1.1/g;
+$gradle_comp{'icefaces'} .= $_;
 
-# set up a template for a component to be included from the component suite, if any
+# set up a template for a component to be in from the component suite, if any
 my $id = "panelId";
 my %openPanel = ();
 my %closePanel = ();
 
 # initialize a hash with the open tag for the component for each component suite
-$openPanel{"jsf"} = "<h:panelGroup id=\"$id\" styleClass=\"\$\{artifactId\}-hello-world\" layout=\"block\">";
+$openPanel{"jsf"} = "<h:panelGroup id=\"$id\" layout=\"block\">";
 $openPanel{"primefaces"} = "<p:panel id=\"$id\">";
 $openPanel{"icefaces"} = "<ace:panel id=\"$id\">";
 $openPanel{"richfaces"} = "<rich:panel id=\"$id\">";
@@ -417,28 +470,28 @@ $mojarra_version{"jsf-2.2"} = "2.2.13";
 $mojarra_version{"jsf-2.3"} = "2.3.0-m06-SNAPSHOT";
 
 my %impl_version = ();
-$impl_version{"jsf-2.1:2.0.x"} = "3.0.0-SNAPSHOT";
-$impl_version{"jsf-2.2:2.0.x"} = "4.0.0-SNAPSHOT";
-$impl_version{"jsf-2.2:3.0.x"} = "5.0.0-SNAPSHOT";
-$impl_version{"jsf-2.3:3.0.x"} = "5.0.0-SNAPSHOT";
+$impl_version{"jsf-2.1:2.0.x"} = "3.0.0";
+$impl_version{"jsf-2.2:2.0.x"} = "4.0.0";
+$impl_version{"jsf-2.2:3.0.x"} = "5.0.0";
+$impl_version{"jsf-2.3:3.0.x"} = "5.0.0";
 
-$impl_version{"jsf-2.1:6.2.x"} = "3.0.0-SNAPSHOT";
-$impl_version{"jsf-2.2:6.2.x"} = "4.0.0-SNAPSHOT";
-$impl_version{"jsf-2.1:7.0.x"} = "3.0.0-SNAPSHOT";
-$impl_version{"jsf-2.2:7.0.x"} = "4.0.0-SNAPSHOT";
-$impl_version{"jsf-2.2:7.1.x"} = "5.0.0-SNAPSHOT";
+$impl_version{"jsf-2.1:6.2.x"} = "3.0.0";
+$impl_version{"jsf-2.2:6.2.x"} = "4.0.0";
+$impl_version{"jsf-2.1:7.0.x"} = "3.0.0";
+$impl_version{"jsf-2.2:7.0.x"} = "4.0.0";
+$impl_version{"jsf-2.2:7.1.x"} = "5.0.0";
 
 my %ext_version = ();
-$ext_version{"jsf-2.1:6.2.x"} = "2.0.0-SNAPSHOT";
-$ext_version{"jsf-2.2:6.2.x"} = "3.0.0-SNAPSHOT";
-$ext_version{"jsf-2.1:7.0.x"} = "4.0.0-SNAPSHOT";
-$ext_version{"jsf-2.2:7.0.x"} = "5.0.0-SNAPSHOT";
-$ext_version{"jsf-2.2:7.1.x"} = "6.0.0-SNAPSHOT";
+$ext_version{"jsf-2.1:6.2.x"} = "2.0.0";
+$ext_version{"jsf-2.2:6.2.x"} = "3.0.0";
+$ext_version{"jsf-2.1:7.0.x"} = "4.0.0";
+$ext_version{"jsf-2.2:7.0.x"} = "5.0.0";
+$ext_version{"jsf-2.2:7.1.x"} = "6.0.0";
 
 # generate archetypes from our list
 my $now = time();
 my($a,$path);
-my($artifactId,$name,$ver,$description);
+my($artifactId,$seedVersion,$name,$description);
 my @archs = reverse sort keys %arch;
 for $a (@archs) {
 	($component,$bundle,$container,$version,$jsf) = split " ", "    ";
@@ -466,8 +519,6 @@ for $a (@archs) {
 	# <description>Maven archetype for a Liferay JSF portlet</description>
 	$description = "Maven archetype for a " . ucfirst($container) . " " .
 		$suiteName{$component} . " " . (($container eq "webapp") ? "webapp" : "portlet");
-
-	$ver = $ext_version{"${jsf}:${version}"};
 
 	$_ = `pwd`; chomp;
 	my $here = $_;
@@ -505,6 +556,7 @@ for $a (@archs) {
 			$now = time(); `echo $0: $now: $path: building ... >>$log`;
 		}
 
+		# use the jsf-portlet archetypes in the liferay-faces projects as the seeds
 		if ($jsf eq "jsf-2.1") {
 			if ($version =~ /^6.2/) {
 				`cp -pr $ENV{"HOME"}/Projects/liferay.com/liferay-faces/liferay-faces-bridge-ext-2.x/archetype/jsf-portlet/pom.xml $path/.`;
@@ -535,20 +587,13 @@ for $a (@archs) {
 				`cp -pr $ENV{"HOME"}/Projects/liferay.com/liferay-faces/liferay-faces-bridge-ext/archetype/jsf-portlet/src $path/.`;
 			}
 		}
-
-		# if ($version =~ /^6.2/) {
-		# 	`cp -pr archetype_seeds/jsf-portlet-liferay-$jsf-archetype-6.2.x/* $path/.`;
-		# }
-		# if ($version =~ /^7.0/ and $jsf eq "jsf-2.1") {
-		# 	`cp -pr archetype_seeds/jsf-portlet-liferay-jsf-2.2-archetype-7.0.x/* $path/.`;
-		# }
-		# if ($version =~ /^7.0/ and $jsf eq "jsf-2.2") {
-		# 	`cp -pr archetype_seeds/jsf-portlet-liferay-jsf-2.2-archetype-7.0.x/* $path/.`;
-		# }
 	}
 
 	# fix the archetype seed
 	find(\&fix, "$path");
+
+	# this seedVersion is extracted from the parent pom of the seed archetype in the fix routine
+	# print "seedVersion = $seedVersion";
 
 	# install the artifact, if any
 	chdir $path or die "cannot chdir to $path: $!\n";
@@ -568,7 +613,7 @@ for $a (@archs) {
 			$now = time(); `echo $0: $now: $path: archetype:generate ... >>$log`;
 		}
 		print " archetype:generate ...";
-		`mvn -B archetype:generate -DarchetypeGroupId=${archetypeGroupId} -DarchetypeArtifactId=$artifactId -DarchetypeVersion=$ver -DgroupId=myGroupId -DartifactId=myArtifactId >>mvn_archetype_generate.log 2>>mvn_archetype_generate.log`;
+		`mvn -B archetype:generate -DarchetypeGroupId=${archetypeGroupId} -DarchetypeArtifactId=$artifactId -DarchetypeVersion=$seedVersion -DgroupId=myGroupId -DartifactId=myArtifactId >>mvn_archetype_generate.log 2>>mvn_archetype_generate.log`;
 
 		# build the application, if any
 		chdir "myArtifactId" or die "cannot chdir to $here/try/myArtifactId: $!\n";
@@ -644,6 +689,7 @@ for $a (@archs) {
 	chdir $here or die "cannot chdir back to $here: $!\n";
 }
 
+# TODO augment the fix routine below to fix the build.gradle file
 sub fix {
 
 	my $file = $_;
@@ -664,8 +710,14 @@ sub fix {
 		# <name>JSF Portlet Pluto Archetype</name>
 		`perl -pi -e 's/^	<name>..*</	<name>$name</g' $file`;
 
-		# <version>2.0.0-SNAPSHOT</version>
-		`perl -pi -e 's/^	<version>..*</	<version>$ver</g' $file`;
+		# no need to change this version ...
+		# `perl -pi -e 's/^	<version>..*</	<version>$seedVersion</g' $file`;
+
+		my $pom = XMLin('pom.xml');
+		# print Dumper($pom);
+
+		# we simply need to extract the version of the archetype from the seed pom
+		$seedVersion = $pom->{version};
 
 		# <description>Provides an archetype to create JSF portlets for Pluto.</description>
 		`perl -pi -e 's/^	<description>..*</	<description>$description</g' $file`;
@@ -691,41 +743,91 @@ sub fix {
 	##### fix archetype-resources below here #####
 
 	# fix the archetype resource pom files to use the correct impl and ext versions, if any
+	if ($file eq "build.gradle" and $File::Find::name =~ /archetype-resources/) {
+		# print "    fixing: $File::Find::name $key\n";
+
+		# add a repo, if any
+		if (defined $gradle_repo{"$component"}) {
+			$_ = read_file("build.gradle");
+			s/{\n     maven/{\n     $gradle_repo{"$component"}\n     maven/;
+
+			open OUT, ">build.gradle.tmp" or die "cannot open >build.gradle.tmp: $!\n";
+			print OUT; close OUT;
+			rename("build.gradle.tmp", "build.gradle");
+		}
+
+		# deal with icefaces-compat, if any ...
+		if ($gradle_comp{"$component"} =~ /icefaces/) {
+
+			$_ = $gradle_dependencyManagement;
+			s/ICE_VERSION/4.1.1/g;
+			if ($jsf eq "jsf-2.1") { 
+				s/ICEFACES_COMPAT_VERSION/\n    compile group: 'org.icefaces', name: 'icefaces-compat', version:'3.3.0'/;
+				s/4.1.1/3.3.0/g;
+			} else {
+				s/ICEFACES_COMPAT_VERSION//;
+			}
+			$gradle_comp{"$component"} = $_;
+		}
+
+		# fix alloy suite version
+		# if liferay 6.2 and alloy is the component suite, then switch to version 2
+		if ($version =~ /^6.2/ and $gradle_comp{"$component"} =~ /alloy/) {
+			$_ = $gradle_comp{"$component"};
+			s/'3./'2./;
+			$gradle_comp{"$component"} = $_;
+			# print "for alloy gradle_comp => $_\n";
+		}
+
+		# add a dependency, if any
+		if (defined $gradle_comp{"$component"} and $gradle_comp{"$component"} ne "") {
+			$_ = read_file("build.gradle");
+			s/dependencies {\n    /dependencies {\n    $gradle_comp{"$component"}\n    /;
+
+			open OUT, ">build.gradle.tmp" or die "cannot open >build.gradle.tmp: $!\n";
+			print OUT; close OUT;
+			rename("build.gradle.tmp", "build.gradle");
+		}
+	}
+
+	# fix the archetype resource pom files to use the correct impl and ext versions, if any
 	if ($file eq "pom.xml" and $File::Find::name =~ /archetype-resources/) {
 		# print "    fixing: $File::Find::name $key\n";
 
-		# <liferay.faces.bridge.impl.version>3.0.0-SNAPSHOT</liferay.faces.bridge.impl.version>
-		if ($container ne "webapp") {
-			`perl -pi -e 's/liferay.faces.bridge.impl.version>[34].0.0-SNAPSHOT</liferay.faces.bridge.impl.version>$impl_version{"$key"}</g' $file`;
-			# print `grep "liferay.faces.bridge.impl.version>" $file`;
-		}
+# These below should not be necessary since we switched to using the jsf-portlet archetypes as seeds i.e. impl, ext, faces, and mojarra versions
 
-		# Assumes the following in the seed:
-		# faces.api.version>2.2<
-		# liferay.faces.bridge.ext.version>5.0.0-SNAPSHOT<
-		# liferay.faces.bridge.version>4.0.0-SNAPSHOT<
-		# mojarra.version>2.2.13<
-		if ($container eq "liferay") {
+#		# <liferay.faces.bridge.impl.version>3.0.0</liferay.faces.bridge.impl.version>
+#		if ($container ne "webapp") {
+#			`perl -pi -e 's/liferay.faces.bridge.impl.version>[34].\\d+.\\d+-SNAPSHOT</liferay.faces.bridge.impl.version>$impl_version{"$key"}</g' $file`;
+#			print `grep "liferay.faces.bridge.impl.version>" $file`;
+#		}
 
-			# <faces.api.version>2.2</faces.api.version>
-			# print "\nB: " . `grep "faces.api.version>" $file`;
-			`perl -pi -e 's/faces.api.version>2.2</faces.api.version>$faces_version{"$jsf"}</g' $file`;
-			# print "A: " . `grep "faces.api.version>" $file`;
-
-			# print "\nB: " . `grep "liferay.faces.bridge.ext.version>" $file`;
-			`perl -pi -e 's/liferay.faces.bridge.ext.version>5.0.0-SNAPSHOT</liferay.faces.bridge.ext.version>$ext_version{"$key"}</g' $file`;
-			# print "A: " . `grep "liferay.faces.bridge.ext.version>" $file`;
-
-			# <liferay.faces.bridge.version>4.0.0-SNAPSHOT</liferay.faces.bridge.version>
-			# print "\nB: " . `grep "liferay.faces.bridge.version>" $file`;
-			`perl -pi -e 's/liferay.faces.bridge.version>4.0.0-SNAPSHOT</liferay.faces.bridge.version>$impl_version{"$key"}</g' $file`;
-			# print "A: " . `grep "liferay.faces.bridge.version>" $file`;
-
-			# print "\nB: " . `grep "mojarra.version>" $file`;
-			`perl -pi -e 's/mojarra.version>2.2.13</mojarra.version>$mojarra_version{"$jsf"}</g' $file`;
-			# print "A: " . `grep "mojarra.version>" $file`;
-
-		}
+#		# Assumes the following in the seed:
+#		# faces.api.version>2.2<
+#		# liferay.faces.bridge.ext.version>5.0.0-SNAPSHOT<
+#		# liferay.faces.bridge.version>4.0.0-SNAPSHOT<
+#		# mojarra.version>2.2.13<
+#		if ($container eq "liferay") {
+#
+#			# <faces.api.version>2.2</faces.api.version>
+#			print "\nB: " . `grep "faces.api.version>" $file`;
+#			`perl -pi -e 's/faces.api.version>2.2</faces.api.version>$faces_version{"$jsf"}</g' $file`;
+#			print "A: " . `grep "faces.api.version>" $file`;
+#
+#			# print "\nB: " . `grep "liferay.faces.bridge.ext.version>" $file`;
+#			`perl -pi -e 's/liferay.faces.bridge.ext.version>5.\\d+.\\d+-SNAPSHOT</liferay.faces.bridge.ext.version>$ext_version{"$key"}</g' $file`;
+#			# print "A: " . `grep "liferay.faces.bridge.ext.version>" $file`;
+#
+#			# <liferay.faces.bridge.version>4.0.0-SNAPSHOT</liferay.faces.bridge.version>
+#			# print "\nB: " . `grep "liferay.faces.bridge.version>" $file`;
+#			`perl -pi -e 's/liferay.faces.bridge.version>4.\\d+.\\d+-SNAPSHOT</liferay.faces.bridge.version>$impl_version{"$key"}</g' $file`;
+#			# print "A: " . `grep "liferay.faces.bridge.version>" $file`;
+#
+#			print "\nB: " . `grep "mojarra.version>" $file`;
+#			`perl -pi -e 's/mojarra.version>2.2.13</mojarra.version>$mojarra_version{"$jsf"}</g' $file`;
+#			print "A: " . `grep "mojarra.version>" $file`;
+#
+#		}
 
 		# add dependency for any component suite
 		$_ = $comp{"$component"};

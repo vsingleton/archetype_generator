@@ -55,6 +55,7 @@ if [ ! -d $dir ]; then mkdir -p $dir && echo made $dir ...; fi
 dir=~/Projects/liferay.com/liferay-faces/liferay-faces-bridge-ext-2.x/archetype/richfaces-portlet
 if [ ! -d $dir ]; then mkdir -p $dir && echo made $dir ...; fi
 
+# 5.x
 rsync -vax deps/archetypes/icefaces/war/liferay/7.0.x/jsf-2.2/* ~/Projects/liferay.com/liferay-faces/liferay-faces-bridge-ext-5.x/archetype/icefaces-portlet/.
 rsync -vax deps/archetypes/jsf/war/liferay/7.0.x/jsf-2.2/* ~/Projects/liferay.com/liferay-faces/liferay-faces-bridge-ext-5.x/archetype/jsf-portlet/.
 rsync -vax deps/archetypes/liferay-faces-alloy/war/liferay/7.0.x/jsf-2.2/* ~/Projects/liferay.com/liferay-faces/liferay-faces-bridge-ext-5.x/archetype/alloy-portlet/.
