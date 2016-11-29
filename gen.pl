@@ -144,7 +144,7 @@ $gradle_comp{'jsf'} = "";
 my $agnosticVersion = "";
 
 # primefaces
-$_ = $gradle_repository; s,URL,http://repository.primefaces.org,; $gradle_repo{'primefaces'} = $_;
+# $_ = $gradle_repository; s,URL,http://repository.primefaces.org,; $gradle_repo{'primefaces'} = $_;
 $agnosticVersion = "6.0";
 $_ = $dependency;
 s/groupId>..*</groupId>org.primefaces</;
@@ -218,7 +218,7 @@ $_ = $gradleDependency; s/G/com.liferay.faces.util/; s/A/liferay-faces-util/; s/
 
 # icefaces
 
-$_ = $gradle_repository; s,URL,http://anonsvn.icefaces.org/repo/maven2/releases/,; $gradle_repo{'icefaces'} = $_;
+# $_ = $gradle_repository; s,URL,http://anonsvn.icefaces.org/repo/maven2/releases/,; $gradle_repo{'icefaces'} = $_;
 
 # <!-- Note: icefaces-compat required due to http://jira.icesoft.org/browse/ICE-8444 -->
 # <dependency>
